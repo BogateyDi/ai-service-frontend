@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
-import { ThesisSectionInput } from '../types';
+import { ThesisSectionInput } from '../types.ts';
 
 interface ThesisFormProps {
   onSubmit: (topic: string, field: string, sections: ThesisSectionInput[]) => void;

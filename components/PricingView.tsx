@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { PRICING_PACKAGES } from '../constants';
-import { GenerationPackage } from '../types';
+import { GenerationPackage } from '../types.ts';
 
 interface PricingViewProps {
   onPurchase: (pkg: GenerationPackage) => void;

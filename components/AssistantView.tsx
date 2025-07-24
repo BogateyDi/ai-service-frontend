@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
-import { ChatMessage, DocumentType, FavoriteService, GenerationRecord, UserAccount } from '../types';
-import { MirraAvatar } from './MirraAvatar';
-import { DaryAvatar } from './DariaAvatar';
-import { VerticalSelector } from './VerticalSelector';
-import { STUDENT_DOC_TYPES_STANDARD, STUDENT_DOC_TYPES_INTERACTIVE, ADULT_CATEGORIES, DOC_TYPES_BY_ADULT_CATEGORY, CHILDREN_AGES } from '../constants';
+import { ChatMessage, DocumentType, FavoriteService, GenerationRecord, UserAccount } from '../types.ts';
+import { MirraAvatar } from './MirraAvatar.tsx';
+import { DaryAvatar } from './DariaAvatar.tsx';
+import { VerticalSelector } from './VerticalSelector.tsx';
+import { STUDENT_DOC_TYPES_STANDARD, STUDENT_DOC_TYPES_INTERACTIVE, ADULT_CATEGORIES, DOC_TYPES_BY_ADULT_CATEGORY, CHILDREN_AGES } from '../constants.ts';
 
 
 interface AssistantViewProps {
