@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PRICING_PACKAGES } from '../constants';
+import { PRICING_PACKAGES } from '../constants.ts';
 import { GenerationPackage } from '../types.ts';
 
 interface PricingViewProps {
