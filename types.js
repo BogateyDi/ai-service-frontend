@@ -1,3 +1,4 @@
+
 export const DocumentType = {
   // Student types
   COMPOSITION: 'Сочинение',
@@ -47,5 +48,5 @@ export const DocumentType = {
 export const AppView = {
     GENERATOR: 0,
     PRICING: 1,
-    ASSISTANT: 2,
+    ASSISTANT: 2
 };

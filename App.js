@@ -60,30 +60,6 @@ const MatrixBackground = ({ isAnimating }) => {
             zIndex: -1,
             pointerEvents: 'none'
         }}>
-           <style>{`
-              @keyframes matrix-fall {
-                  from { transform: translateY(-100%); }
-                  to { transform: translateY(100vh); }
-              }
-              .matrix-column-bg {
-                  position: absolute;
-                  top: 0;
-                  writing-mode: vertical-rl;
-                  text-orientation: mixed;
-                  white-space: nowrap;
-                  user-select: none;
-                  animation-name: matrix-fall;
-                  animation-timing-function: linear;
-                  animation-iteration-count: infinite;
-                  color: rgba(255, 255, 255, 0.15);
-                  font-family: 'Courier New', Courier, monospace;
-                  font-size: 1rem;
-                  animation-play-state: paused;
-              }
-              .matrix-column-bg.animating {
-                animation-play-state: running;
-              }
-          `}</style>
           {columns.map(col => (
             <div key={col.id} style={col.style} className={`matrix-column-bg ${isAnimating ? 'animating' : ''}`}>
               {col.chars}
