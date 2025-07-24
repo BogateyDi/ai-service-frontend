@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI - Помощник</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html {
+        font-family: 'Inter', sans-serif;
+        font-size: 120%;
+      }
+      :root {
+        --bg-dark: #192c42;
+        --bg-light: #4c5866;
+        --bg-card: #ffffff;
+        
+        --border-color-light: #e5e7eb;
+        --border-color-dark: #374151;
+
+        --text-light-primary: #f9fafb;
+        --text-light-secondary: #d1d5db;
+        --text-dark-primary: #1f2937;
+        --text-dark-secondary: #4c5866; /* Increased contrast for accessibility */
+        
+        /* Unify all accent colors to the one from the image (#192c42) */
+        --accent: #192c42;
+        --accent-light: #2a415e; /* A lighter version for hover states */
+        --accent-soft: #dde2e8; /* A very light version for soft backgrounds */
+
+        --accent-advanced: var(--accent);
+        --accent-advanced-dark: var(--accent-light);
+        --accent-advanced-soft: var(--accent-soft);
+
+        --accent-science: var(--accent);
+        --accent-science-dark: var(--accent-light);
+        --accent-science-soft: var(--accent-soft);
+
+        --accent-life: var(--accent);
+        --accent-life-dark: var(--accent-light);
+        --accent-life-soft: var(--accent-soft);
+        
+        --accent-code: #2563eb; /* Bright Blue for Code section */
+        --accent-code-dark: #1d4ed8;
+        --accent-code-soft: #dbeafe;
+
+        --accent-gold: #c7923e; /* Rusty Gold */
+
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --shadow-deep: 0 12px 24px -6px rgba(0, 0, 0, 0.1), 0 24px 48px -12px rgba(0, 0, 0, 0.15);
+      }
+      body {
+        background-color: var(--bg-light);
+        color: var(--text-light-primary);
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-light);
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--border-color-light);
+        border-radius: 10px;
+        border: 2px solid var(--bg-light);
+      }
+       ::-webkit-scrollbar-thumb:hover {
+        background-color: #d1d5db;
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      /* Custom scrollbar for chat window */
+      .chat-scrollbar::-webkit-scrollbar {
+        width: 10px;
+      }
+      .chat-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9; /* bg-slate-100 */
+        border-radius: 10px;
+      }
+      .chat-scrollbar::-webkit-scrollbar-thumb {
+        background-color: var(--accent);
+        border-radius: 10px;
+        border: 2px solid #f1f5f9;
+      }
+      .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: var(--accent-light);
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.10.0",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "xlsx": "https://esm.sh/xlsx@^0.18.5",
+    "react-hot-toast": "https://esm.sh/react-hot-toast@^2.5.2",
+    "mammoth": "https://esm.sh/mammoth@^1.9.1",
+    "mermaid": "https://esm.sh/mermaid@^11.9.0",
+    "express": "https://esm.sh/express@^5.1.0",
+    "cors": "https://esm.sh/cors@^2.8.5",
+    "dotenv": "https://esm.sh/dotenv@^17.2.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
