@@ -1,5 +1,6 @@
 
 
+
 import { 
     DocumentType, 
     GenerationResult, 
@@ -24,7 +25,7 @@ import {
     GenerationRecord,
     AudioScriptRequest,
     Specialist,
-} from '../types';
+} from '../types.ts';
 
 const BACKEND_URL = 'https://ai-service-backend-8lea.onrender.com';
 
@@ -241,7 +242,6 @@ export const generateFullThesis = async (topic: string, field: string, sections:
                 // This part is tricky. Backend needs to handle file-to-text conversion.
                 // Assuming backend can receive a mix of generation requests and pre-uploaded file IDs.
                 // For simplicity here, we assume file content is handled by a different mechanism or manually inserted.
-                // A more robust solution would involve uploading files first and passing their IDs.
                 fullText += `[Содержимое файла ${section.file.name} будет вставлено здесь]`;
              }
         });

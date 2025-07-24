@@ -1,4 +1,5 @@
-import { DocumentType, GenerationPackage, Specialist, VoiceProfile } from './types';
+
+import { DocumentType, GenerationPackage, Specialist, VoiceProfile } from './types.ts';
 
 export const CHILDREN_AGES: number[] = Array.from({ length: 12 }, (_, i) => i + 6); // Ages 6 to 17
 

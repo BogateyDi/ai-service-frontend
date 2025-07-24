@@ -21,12 +21,12 @@ import {
     AudioScriptRequest,
     AnalysisStep,
     ForecastingStep
-} from '../types';
-import { BOOK_GENRES, BOOK_STYLES, MARKETING_TEXT_TYPES, TONE_OF_VOICE_OPTIONS, REWRITING_GOALS, REWRITING_STYLES, PROGRAMMING_LANGUAGES, SPECIALISTS, TUTOR_SUBJECTS, AUDIO_SCRIPT_TYPES, AUDIO_VOICE_PROFILES } from '../constants';
+} from '../types.ts';
+import { BOOK_GENRES, BOOK_STYLES, MARKETING_TEXT_TYPES, TONE_OF_VOICE_OPTIONS, REWRITING_GOALS, REWRITING_STYLES, PROGRAMMING_LANGUAGES, SPECIALISTS, TUTOR_SUBJECTS, AUDIO_SCRIPT_TYPES, AUDIO_VOICE_PROFILES } from '../constants.ts';
 
-import FileUploadForm from './FileUploadForm';
-import { ThesisForm } from './ThesisForm';
-import { MermaidDiagram } from './MermaidDiagram';
+import FileUploadForm from './FileUploadForm.tsx';
+import { ThesisForm } from './ThesisForm.tsx';
+import { MermaidDiagram } from './MermaidDiagram.tsx';
 
 
 interface ResultDisplayProps {
@@ -1383,31 +1383,33 @@ const ArticlePlanForm: React.FC<{ onSubmit: (request: AcademicArticleRequest, fi
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col h-full text-left p-2">
-            <h3 className="text-xl font-semibold mb-4 text-center">{isGrant ? "Планирование гранта" : "Планирование научной статьи"}</h3>
+            <h3 className="text-xl font-semibold mb-4 text-center">{isGrant ? 'Заявка на грант' : 'Научная статья'}</h3>
             <div className="flex-grow space-y-3 overflow-y-auto pr-2">
-                <div>
-                    <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Тема*</label>
-                    <input type="text" value={topic} onChange={e => setTopic(e.target.value)} placeholder={isGrant ? "Название грантового проекта" : "Тема вашей научной статьи"} className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-science)]" required />
-                </div>
-                 <div>
-                    <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">{isGrant ? "Основная идея/Цель проекта" : "Гипотеза или главный вопрос"} (необязательно)</label>
-                    <textarea value={hypothesis} onChange={e => setHypothesis(e.target.value)} rows={3} className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-science)] resize-none" />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Научная область*</label>
-                    <input type="text" value={field} onChange={e => setField(e.target.value)} placeholder="Например: 'Биоинформатика', 'Социология'" className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-science)]" required />
-                </div>
-                 <div>
-                    <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Количество разделов (3-15)</label>
-                    <input type="number" value={sectionsCount} onChange={e => setSectionsCount(parseInt(e.target.value, 10))} min="3" max="15" className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-science)]" required />
-                </div>
                 {isGrant && (
-                    <div>
-                        <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Форма заявки (необязательно)</label>
-                        <input type="file" onChange={handleFileChange} accept=".txt,.doc,.docx" className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent-soft)] file:text-[var(--accent)] hover:file:bg-[var(--accent-soft)]/80"/>
+                     <div>
+                        <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Загрузить документ с требованиями гранта (необязательно)</label>
+                        <input type="file" onChange={handleFileChange} accept=".txt,.docx,.pdf" className="w-full text-sm mt-1 text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent-science-soft)] file:text-[var(--accent-science)] hover:file:bg-[var(--accent-science-soft)]/80"/>
                         {file && <p className="text-xs mt-1 text-gray-500">Выбран файл: {file.name}</p>}
                     </div>
                 )}
+                <div>
+                    <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">{isGrant ? 'Тема проекта' : 'Тема статьи'}*</label>
+                    <input type="text" value={topic} onChange={e => setTopic(e.target.value)} required className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-science)]"/>
+                </div>
+                 <div>
+                    <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">{isGrant ? 'Ключевая идея / цель проекта' : 'Гипотеза / основной тезис'}</label>
+                    <textarea value={hypothesis} onChange={e => setHypothesis(e.target.value)} rows={3} className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-science)] resize-none"/>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Область науки*</label>
+                        <input type="text" value={field} onChange={e => setField(e.target.value)} required placeholder="Например: 'Биоинформатика'" className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-science)]"/>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Разделов (3-15)*</label>
+                        <input type="number" value={sectionsCount} onChange={e => setSectionsCount(parseInt(e.target.value))} min="3" max="15" required className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-science)]"/>
+                    </div>
+                </div>
             </div>
              <div className="flex-shrink-0 pt-4 text-center">
                 <p className="text-sm text-[var(--text-dark-secondary)] mb-3">Стоимость создания плана: 1 генерация</p>
@@ -1421,34 +1423,29 @@ const ArticlePlanForm: React.FC<{ onSubmit: (request: AcademicArticleRequest, fi
 
 const ArticlePlanReview: React.FC<{ initialPlan: ArticlePlan, onGenerate: (plan: ArticlePlan) => void, docType: DocumentType }> = ({ initialPlan, onGenerate, docType }) => {
     const [editedPlan, setEditedPlan] = useState<ArticlePlan>(initialPlan);
-    const isGrant = docType === DocumentType.GRANT_PROPOSAL;
 
-    useEffect(() => setEditedPlan(initialPlan), [initialPlan]);
-    
-    const handleSectionChange = (index: number, field: keyof ArticleSection, value: string) => {
-        const newSections = [...editedPlan.sections];
-        newSections[index] = { ...newSections[index], [field]: value };
-        setEditedPlan(prev => ({ ...prev, sections: newSections }));
-    };
+    useEffect(() => {
+        setEditedPlan(initialPlan);
+    }, [initialPlan]);
+
+    const cost = editedPlan.sections.length;
+    const buttonText = docType === DocumentType.GRANT_PROPOSAL ? 'Написать заявку на грант' : 'Написать статью по этому плану';
 
     return (
         <div className="flex flex-col h-full text-left">
-            <h3 className="text-xl font-semibold mb-2 text-center">План {isGrant ? "гранта" : "статьи"}: "{editedPlan.title}"</h3>
+            <h3 className="text-xl font-semibold mb-2 text-center">Структура работы: "{editedPlan.title}"</h3>
             <div className="flex-grow overflow-y-auto space-y-3 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
                 {editedPlan.sections.map((section, index) => (
-                    <div key={index} className="p-3 bg-white rounded-md shadow-sm border border-gray-200 space-y-2">
+                    <div key={index} className="p-3 bg-white rounded-md shadow-sm">
                         <h4 className="font-bold text-[var(--text-dark-primary)]">{index + 1}. {section.title}</h4>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Описание раздела</label>
-                            <textarea value={section.description} onChange={e => handleSectionChange(index, 'description', e.target.value)} rows={2} className="w-full bg-white border border-gray-300 rounded-lg p-2 resize-none focus:outline-none focus:border-[var(--accent-science)] text-sm" />
-                        </div>
+                        <p className="text-sm text-[var(--text-dark-secondary)] mt-1">{section.description}</p>
                     </div>
                 ))}
             </div>
              <div className="flex-shrink-0 pt-4 text-center">
-                <p className="text-sm text-[var(--text-dark-secondary)] mb-3">Стоимость генерации полного текста: <span className="font-bold">{editedPlan.sections.length}</span> генераций</p>
+                <p className="text-sm text-[var(--text-dark-secondary)] mb-3">Стоимость генерации полного текста: <span className="font-bold">{cost}</span> генераций</p>
                 <button onClick={() => onGenerate(editedPlan)} className="w-full max-w-sm bg-[var(--accent-science)] text-white font-semibold py-3 px-4 rounded-lg transition-all hover:bg-[var(--accent-science-dark)]">
-                     {isGrant ? "Написать заявку по плану" : "Написать статью по плану"}
+                    {buttonText}
                 </button>
              </div>
         </div>
@@ -1458,7 +1455,7 @@ const ArticlePlanReview: React.FC<{ initialPlan: ArticlePlan, onGenerate: (plan:
 const CodeGenerationForm: React.FC<{ onSubmit: (request: CodeGenerationRequest) => void }> = ({ onSubmit }) => {
     const [language, setLanguage] = useState(PROGRAMMING_LANGUAGES[0]);
     const [taskDescription, setTaskDescription] = useState('');
-
+    
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!taskDescription.trim()) {
@@ -1471,25 +1468,70 @@ const CodeGenerationForm: React.FC<{ onSubmit: (request: CodeGenerationRequest) 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col h-full text-left p-2">
             <h3 className="text-xl font-semibold mb-4 text-center">Генерация кода</h3>
-            <div className="flex-grow space-y-4 overflow-y-auto pr-2">
+            <div className="flex-grow flex flex-col space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Язык программирования</label>
                     <select value={language} onChange={e => setLanguage(e.target.value)} className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-code)]">
                         {PROGRAMMING_LANGUAGES.map(lang => <option key={lang} value={lang}>{lang}</option>)}
                     </select>
                 </div>
-                <div>
-                    <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Описание задачи</label>
-                    <textarea value={taskDescription} onChange={e => setTaskDescription(e.target.value)} placeholder="Например: 'Напиши функцию на Python, которая сортирует массив чисел методом быстрой сортировки' или 'Создай HTML-форму с полями для имени, email и пароля'." rows={8} className="w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-code)] resize-none" />
+                <div className="flex-grow flex flex-col">
+                     <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Описание задачи</label>
+                     <textarea 
+                        value={taskDescription} 
+                        onChange={e => setTaskDescription(e.target.value)} 
+                        placeholder="Например: 'Напиши функцию на Python, которая сортирует список чисел методом быстрой сортировки' или 'Создай компонент React для отображения карточки пользователя с аватаром и именем'" 
+                        className="w-full flex-grow bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-code)] resize-none" />
                 </div>
             </div>
-            <div className="flex-shrink-0 pt-4 text-center">
-                <p className="text-sm text-[var(--text-dark-secondary)] mb-3">Стоимость анализа: 1 генерация</p>
+             <div className="flex-shrink-0 pt-4 text-center">
+                <p className="text-sm text-[var(--text-dark-secondary)] mb-3">Стоимость анализа задачи: 1 генерация</p>
                 <button type="submit" className="w-full max-w-sm bg-[var(--accent)] text-white font-semibold py-3 px-4 rounded-lg transition-all hover:bg-[var(--accent-light)]">
-                    Проанализировать задачу
+                     Проанализировать задачу
                 </button>
             </div>
         </form>
+    );
+};
+
+const CodeAnalysisReview: React.FC<{
+    analysis: CodeAnalysisResult;
+    request: CodeGenerationRequest;
+    onConfirm: () => void;
+    onCancel: () => void;
+    remainingGenerations: number;
+}> = ({ analysis, request, onConfirm, onCancel, remainingGenerations }) => {
+    const canAfford = remainingGenerations >= analysis.cost;
+    return (
+        <div className="flex flex-col h-full text-left p-2">
+             <h3 className="text-xl font-semibold mb-4 text-center">Анализ задачи</h3>
+             <div className="flex-grow overflow-y-auto space-y-4 pr-2 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div>
+                    <h4 className="font-bold text-base">План реализации:</h4>
+                    <p className="text-sm whitespace-pre-wrap mt-1">{analysis.plan}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 className="font-bold text-base">Сложность:</h4>
+                        <p className="text-sm mt-1">{analysis.complexity}</p>
+                    </div>
+                     <div>
+                        <h4 className="font-bold text-base">Стоимость генерации:</h4>
+                        <p className="text-2xl font-bold text-[var(--accent-code)] mt-1">{analysis.cost} <span className="text-base font-medium text-gray-600">генераций</span></p>
+                    </div>
+                </div>
+             </div>
+             <div className="flex-shrink-0 pt-4 text-center space-y-2">
+                <button 
+                    onClick={onConfirm}
+                    disabled={!canAfford}
+                    className="w-full max-w-sm bg-[var(--accent-code)] text-white font-semibold py-3 px-4 rounded-lg transition-all hover:brightness-110 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    {canAfford ? `Написать код (${analysis.cost} G)` : `Недостаточно генераций`}
+                </button>
+                <button onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-700">Отмена</button>
+            </div>
+        </div>
     );
 };
 
@@ -1499,7 +1541,7 @@ const ForecastingForm: React.FC<{ onSubmit: (prompt: string) => void }> = ({ onS
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!prompt.trim()) {
-            toast.error("Пожалуйста, опишите, что нужно спрогнозировать.");
+            toast.error("Пожалуйста, опишите задачу для прогнозирования.");
             return;
         }
         onSubmit(prompt);
@@ -1508,18 +1550,18 @@ const ForecastingForm: React.FC<{ onSubmit: (prompt: string) => void }> = ({ onS
     return (
         <form onSubmit={handleSubmit} className="flex flex-col h-full text-left p-2">
             <h3 className="text-xl font-semibold mb-2 text-center">Прогнозирование</h3>
-            <p className="text-sm text-center text-[var(--text-dark-secondary)] mb-4">Опишите задачу для прогноза на основе открытых данных.</p>
+            <p className="text-sm text-center text-[var(--text-dark-secondary)] mb-4">Опишите ситуацию, предоставьте данные и укажите, какой прогноз вам нужен.</p>
             <div className="flex-grow flex flex-col">
                 <textarea 
                     value={prompt} 
                     onChange={e => setPrompt(e.target.value)} 
-                    placeholder="Например: 'Каковы перспективы развития рынка электромобилей в России на ближайшие 5 лет?' или 'Спрогнозируй изменение туристических потоков в Европу после 2024 года.'"
-                    rows={10} 
-                    className="w-full flex-grow bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent)] resize-none" />
+                    placeholder="Например: 'На основе данных о продажах за последние 3 года (файл приложен) спрогнозируй продажи на следующий квартал.' или 'Проанализируй текущие экономические тренды и дай прогноз по курсу доллара на ближайший месяц.'" 
+                    className="w-full flex-grow bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent-life)] resize-none" />
+                <p className="text-xs text-gray-500 mt-2">Вы можете приложить файлы с данными, если это необходимо, через чат с ассистентом после получения базового прогноза.</p>
             </div>
             <div className="flex-shrink-0 pt-4 text-center">
                 <p className="text-sm text-[var(--text-dark-secondary)] mb-3">Стоимость: 3 генерации</p>
-                <button type="submit" className="w-full max-w-sm bg-[var(--accent)] text-white font-semibold py-3 px-4 rounded-lg transition-all hover:bg-[var(--accent-light)]">
+                <button type="submit" className="w-full max-w-sm bg-[var(--accent-life)] text-white font-semibold py-3 px-4 rounded-lg transition-all hover:bg-[var(--accent-life-dark)]">
                      Сделать прогноз
                 </button>
             </div>
@@ -1527,88 +1569,78 @@ const ForecastingForm: React.FC<{ onSubmit: (prompt: string) => void }> = ({ onS
     );
 };
 
-const CodeAnalysisReview: React.FC<{ analysis: CodeAnalysisResult, request: CodeGenerationRequest, onGenerate: () => void, onCancel: () => void, remainingGenerations: number }> = ({ analysis, request, onGenerate, onCancel, remainingGenerations }) => {
-    const canAfford = remainingGenerations >= analysis.cost;
-
-    return (
-        <div className="flex flex-col h-full text-left p-2">
-            <h3 className="text-xl font-semibold mb-4 text-center">Анализ задачи: "{request.language}"</h3>
-            <div className="flex-grow space-y-4 overflow-y-auto pr-2 bg-gray-50 p-4 rounded-lg border">
-                <div>
-                    <h4 className="font-bold text-sm text-gray-700 mb-1">План выполнения:</h4>
-                    <p className="text-sm whitespace-pre-wrap">{analysis.plan}</p>
-                </div>
-                <div>
-                    <h4 className="font-bold text-sm text-gray-700 mb-1">Оценка сложности:</h4>
-                    <p className="text-sm">{analysis.complexity}</p>
-                </div>
-                <div>
-                    <h4 className="font-bold text-sm text-gray-700 mb-1">Стоимость генерации:</h4>
-                    <p className="text-lg font-bold text-[var(--accent-code)]">{analysis.cost} генераций</p>
-                </div>
-            </div>
-            <div className="flex-shrink-0 pt-4 text-center">
-                {!canAfford && (
-                    <p className="text-sm text-red-600 mb-3">
-                        Недостаточно генераций. У вас {remainingGenerations}.
-                    </p>
-                )}
-                <div className="flex gap-4 justify-center">
-                    <button onClick={onCancel} className="w-full max-w-xs bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-lg transition-all hover:bg-gray-300">
-                        Отмена
-                    </button>
-                    <button onClick={onGenerate} disabled={!canAfford} className="w-full max-w-xs bg-[var(--accent)] text-white font-semibold py-3 px-4 rounded-lg transition-all hover:bg-[var(--accent-light)] disabled:bg-gray-400">
-                        Сгенерировать код
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 
 export const ResultDisplay: React.FC<ResultDisplayProps> = ({
-  result,
-  isLoading,
   error,
-  isLoggedIn,
-  remainingGenerations,
-  hasMirra,
-  onShareWithMirra,
-  hasDary,
-  onShareWithDary,
-  onSaveGeneration,
   onBuyGenerations,
-  useGeneration,
+  onAstrologySelect,
+  astrologyStep,
+  onNatalSubmit,
+  onHoroscopeSubmit,
+  bookWritingStep,
+  onPlanSubmit,
+  bookPlan,
+  onGenerateBook,
+  personalAnalysisStep,
+  onPersonalAnalysisSubmit,
+  docAnalysisStep,
+  onDocAnalysisSubmit,
+  consultationStep,
+  onSpecialistSelect,
+  selectedSpecialist,
+  chatMessages,
+  onSendMessage,
+  isLoading,
+  tutorStep,
+  selectedSubject,
+  tutorChatMessages,
+  onTutorSendMessage,
+  onSubjectSelect,
+  fileTaskStep,
+  onFileTaskSubmit,
   docType,
-  onConvertToTable,
-  // Flows
-  astrologyStep, onAstrologySelect, onNatalSubmit, onHoroscopeSubmit,
-  bookWritingStep, bookPlan, onPlanSubmit, onGenerateBook,
-  personalAnalysisStep, onPersonalAnalysisSubmit,
-  docAnalysisStep, onDocAnalysisSubmit,
-  consultationStep, onSpecialistSelect, selectedSpecialist, chatMessages, onSendMessage,
-  tutorStep, onSubjectSelect, selectedSubject, tutorChatMessages, onTutorSendMessage,
-  fileTaskStep, onFileTaskSubmit,
-  businessStep, businessPlan, onSwotSubmit, onCommercialProposalSubmit, onBusinessPlanSubmit, onGenerateBusinessPlan, onMarketingSubmit,
-  creativeStep, onRewritingSubmit, onCreativeFileTaskSubmit, onAudioScriptTopicSubmit, onAudioScriptSubmit, audioScriptRequest,
-  scienceStep, articlePlan, onArticlePlanSubmit, onGenerateArticle,
-  scienceFileStep, onScienceFileTaskSubmit,
-  thesisStep, onThesisSubmit,
-  analysisStep, onAnalysisSubmit,
-  forecastingStep, onForecastSubmit,
-  codeStep, onCodeSubmit, onGenerateCode, codeAnalysis, codeRequest, onCancelCodeAnalysis
+  remainingGenerations,
+  businessStep,
+  onSwotSubmit,
+  onCommercialProposalSubmit,
+  onBusinessPlanSubmit,
+  businessPlan,
+  onGenerateBusinessPlan,
+  onMarketingSubmit,
+  creativeStep,
+  onRewritingSubmit,
+  onCreativeFileTaskSubmit,
+  onAudioScriptTopicSubmit,
+  onAudioScriptSubmit,
+  audioScriptRequest,
+  scienceStep,
+  onArticlePlanSubmit,
+  articlePlan,
+  onGenerateArticle,
+  scienceFileStep,
+  onScienceFileTaskSubmit,
+  thesisStep,
+  onThesisSubmit,
+  analysisStep,
+  onAnalysisSubmit,
+  forecastingStep,
+  onForecastSubmit,
+  codeStep,
+  codeRequest,
+  codeAnalysis,
+  onCodeSubmit,
+  onGenerateCode,
+  onCancelCodeAnalysis
 }) => {
-
-  const isQuotaError = error && (error.includes('quota') || error.includes('429'));
-  const isApiKeyError = error && (error.includes('API_KEY_INVALID') || error.includes('API key not valid'));
-
-  if (isQuotaError) return <QuotaErrorDisplay onBuyGenerations={onBuyGenerations} />;
-  if (isApiKeyError) return <ApiKeyErrorDisplay />;
   if (error) {
+    if (error.includes('quota') || error.includes('limit')) {
+      return <QuotaErrorDisplay onBuyGenerations={onBuyGenerations} />;
+    }
+    if (error.includes('API key') || error.includes('API_KEY_INVALID')) {
+        return <ApiKeyErrorDisplay />;
+    }
     return (
         <div className="flex flex-col items-center justify-center h-full text-center text-red-800 bg-red-50 p-6 rounded-lg border-2 border-red-200">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shield-x mb-4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m14.5 9.5-5 5"/><path d="m9.5 9.5 5 5"/></svg>
             <h3 className="text-xl font-semibold">Произошла ошибка</h3>
             <p className="mt-2 text-sm text-red-700 max-w-md">{error}</p>
         </div>
@@ -1619,30 +1651,35 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   if (astrologyStep === 'selection') return <AstrologySelection onSelect={onAstrologySelect} />;
   if (astrologyStep === 'natal_form') return <NatalChartForm onSubmit={onNatalSubmit} />;
   if (astrologyStep === 'horoscope_form') return <HoroscopeForm onSubmit={onHoroscopeSubmit} />;
-
+  
   // Book Writing Flow
   if (bookWritingStep === 'form') return <BookPlanForm onSubmit={onPlanSubmit} />;
   if (bookWritingStep === 'plan_review' && bookPlan) return <BookPlanReview initialPlan={bookPlan} onGenerate={onGenerateBook} />;
-  
+
   // Personal Analysis Flow
   if (personalAnalysisStep === 'form') return <PersonalAnalysisForm onSubmit={onPersonalAnalysisSubmit} />;
   
-  // Doc Analysis Flow
+  // Document Analysis Flow
   if (docAnalysisStep === 'upload_form') {
-    return <FileUploadForm
-                title="Доктор"
-                description="Загрузите медицинские анализы, заключения или другие документы для анализа."
-                promptLabel="Опишите, что вы хотите узнать из документов"
-                promptPlaceholder="Например: 'Расшифруй, пожалуйста, эти анализы крови' или 'Что означает этот диагноз?'"
-                buttonText="Проанализировать документы"
-                cost={2} maxFiles={5} maxFileSizeMB={10} acceptedFileTypes="image/*,application/pdf"
-                accentColor="accent-life"
-                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>}
-                remainingGenerations={remainingGenerations}
-                onSubmit={onDocAnalysisSubmit}
-            />;
+      return (
+        <FileUploadForm 
+          title="Анализ документов"
+          description="Загрузите до 5 файлов (TXT, DOCX, PDF, JPG, PNG) для анализа."
+          promptLabel="Что вы хотите узнать из этих документов?"
+          promptPlaceholder="Например: 'Суммируй основные тезисы' или 'Найди риски в договоре'"
+          buttonText="Анализировать"
+          cost={2}
+          maxFiles={5}
+          maxFileSizeMB={10}
+          acceptedFileTypes=".txt,.docx,.pdf,image/*"
+          accentColor="accent-life"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--accent-life)] mb-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="m10.4 12.6 1.6 1.4 2.6-2.6"/><path d="M8 18h3"/></svg>}
+          remainingGenerations={remainingGenerations}
+          onSubmit={onDocAnalysisSubmit}
+        />
+      );
   }
-  
+
   // Consultation Flow
   if (consultationStep === 'selection') return <SpecialistSelection onSelect={onSpecialistSelect} />;
   if (consultationStep === 'chatting' && selectedSpecialist) {
@@ -1652,69 +1689,91 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   // Tutor Flow
   if (tutorStep === 'subject_selection') return <SubjectSelection onSelect={onSubjectSelect} />;
   if (tutorStep === 'chatting' && selectedSubject) {
-    const tutorSpecialist: Specialist = { id: 'tutor', name: `Репетитор: ${selectedSubject}`, description: '', category: 'Другие сферы', systemInstruction: '' };
-    return <ChatWindow specialist={tutorSpecialist} messages={tutorChatMessages} onSendMessage={onTutorSendMessage} isLoading={isLoading} />;
-  }
-  
-  // File Task Flow
-  if (fileTaskStep === 'upload_form') {
-    return <FileUploadForm
-                title={docType === DocumentType.DO_HOMEWORK ? "Сделать ДЗ" : "Решить КР, ПР"}
-                description="Загрузите фото или файлы с вашим заданием, чтобы получить решение и объяснение."
-                promptLabel="Пояснения к заданию (необязательно)"
-                promptPlaceholder="Например: 'Нужно решить только нечетные номера' или 'Объясни, пожалуйста, второй шаг подробнее'"
-                buttonText="Отправить на решение"
-                cost={docType === DocumentType.DO_HOMEWORK ? 2 : 1}
-                maxFiles={10} maxFileSizeMB={10} acceptedFileTypes="image/*,application/pdf,.doc,.docx,.txt"
-                accentColor="accent"
-                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>}
-                remainingGenerations={remainingGenerations}
-                onSubmit={onFileTaskSubmit}
-            />;
+     const specialistForTutor: Specialist = {
+            id: `tutor-${selectedSubject.toLowerCase()}`,
+            name: `Репетитор: ${selectedSubject}`,
+            description: '', category: 'Другие сферы', systemInstruction: ''
+     };
+    return <ChatWindow specialist={specialistForTutor} messages={tutorChatMessages} onSendMessage={onTutorSendMessage} isLoading={isLoading} />;
   }
 
+  // File Task Flow (Homework/Control work)
+  if (fileTaskStep === 'upload_form') {
+      const isHomework = docType === DocumentType.DO_HOMEWORK;
+      return (
+        <FileUploadForm 
+          title={isHomework ? 'Сделать домашнее задание' : 'Решить контрольную/практическую'}
+          description="Загрузите фото или файлы с вашим заданием (до 5 файлов)."
+          promptLabel="Пояснения к заданию (необязательно)"
+          promptPlaceholder="Например: 'Нужно решить только нечетные номера' или 'Объясни каждый шаг'"
+          buttonText={isHomework ? 'Сделать ДЗ' : 'Решить работу'}
+          cost={isHomework ? 2 : 1}
+          maxFiles={5}
+          maxFileSizeMB={10}
+          acceptedFileTypes=".txt,.docx,.pdf,image/*"
+          accentColor="accent"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--accent)] mb-2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>}
+          remainingGenerations={remainingGenerations}
+          onSubmit={onFileTaskSubmit}
+        />
+      );
+  }
+  
   // Business Flow
   if (businessStep === 'swot_form') return <SwotAnalysisForm onSubmit={onSwotSubmit} />;
   if (businessStep === 'proposal_form') return <CommercialProposalForm onSubmit={onCommercialProposalSubmit} />;
   if (businessStep === 'business_plan_form') return <BusinessPlanForm onSubmit={onBusinessPlanSubmit} />;
   if (businessStep === 'plan_review' && businessPlan) return <BusinessPlanReview initialPlan={businessPlan} onGenerate={onGenerateBusinessPlan} />;
   if (businessStep === 'marketing_form') return <MarketingCopyForm onSubmit={onMarketingSubmit} />;
-  
+
   // Creative Flow
   if (creativeStep === 'rewriting_form') return <TextRewritingForm onSubmit={onRewritingSubmit} />;
   if (creativeStep === 'script_upload_form') {
-    return <FileUploadForm
-                title="Анализ сценария"
-                description="Загрузите ваш сценарий, синопсис, логлайн или просто идеи для анализа и улучшения."
-                promptLabel="Что вы хотите улучшить или проанализировать?"
-                promptPlaceholder="Например: 'Усилить конфликт во втором акте', 'Проверить диалоги на естественность', 'Предложить варианты развития сюжета'"
-                buttonText="Отправить на анализ"
-                cost={2} maxFiles={3} maxFileSizeMB={10} acceptedFileTypes=".txt,.doc,.docx"
-                accentColor="accent-creative"
-                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="12" y2="18"/></svg>}
-                remainingGenerations={remainingGenerations}
-                onSubmit={(files, prompt) => onCreativeFileTaskSubmit(files, '', prompt)}
-            />;
+      return (
+        <FileUploadForm 
+          title="Анализ сценария"
+          description="Загрузите ваш сценарий или наработки для анализа и улучшения."
+          promptLabel="Что вы хотите получить?"
+          promptPlaceholder="Например: 'Проанализируй диалоги', 'Предложи варианты развития сюжета', 'Оцени структуру'"
+          buttonText="Анализировать"
+          cost={2}
+          maxFiles={1}
+          maxFileSizeMB={10}
+          acceptedFileTypes=".txt,.docx,.pdf"
+          accentColor="accent-creative"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--accent-creative)] mb-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="m10.4 12.6 1.6 1.4 2.6-2.6"/></svg>}
+          remainingGenerations={remainingGenerations}
+          onSubmit={(files, prompt) => onCreativeFileTaskSubmit(files, '', prompt)}
+        />
+      );
   }
   if (creativeStep === 'audio_script_topic') return <AudioScriptTopicForm onSubmit={onAudioScriptTopicSubmit} />;
   if (creativeStep === 'audio_script_config') return <AudioScriptConfigForm onSubmit={onAudioScriptSubmit} request={audioScriptRequest} />;
-
+  
   // Science Flow
   if (scienceStep === 'article_form') return <ArticlePlanForm onSubmit={onArticlePlanSubmit} docType={docType} />;
   if (scienceStep === 'plan_review' && articlePlan) return <ArticlePlanReview initialPlan={articlePlan} onGenerate={onGenerateArticle} docType={docType} />;
+
+  // Science File Flow
   if (scienceFileStep === 'upload_form') {
-      return <FileUploadForm
-                  title={docType}
-                  description="Загрузите файлы для проведения изыскания или улучшения технологии."
-                  promptLabel="Пояснения к задаче"
-                  promptPlaceholder="Например: 'Проанализируй эти данные и предложи гипотезы' или 'На основе этих патентов предложи улучшения для технологии...'"
-                  buttonText="Начать анализ"
-                  cost={2} maxFiles={10} maxFileSizeMB={10} acceptedFileTypes="image/*,application/pdf,.doc,.docx,.txt"
-                  accentColor="accent-science"
-                  icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>}
-                  remainingGenerations={remainingGenerations}
-                  onSubmit={onScienceFileTaskSubmit}
-              />;
+      const isResearch = docType === DocumentType.SCIENTIFIC_RESEARCH;
+      return (
+          <FileUploadForm 
+            title={isResearch ? "Научное изыскание" : "Улучшение технологии"}
+            description="Загрузите до 5 файлов (PDF, TXT, DOCX) с научными работами, патентами или данными."
+            promptLabel="Сформулируйте вашу задачу"
+            promptPlaceholder={isResearch ? "Например: 'Проведи обзор литературы по этим статьям' или 'Сравни методологии'" : "Например: 'На основе этих патентов предложи варианты улучшения технологии X'"}
+            buttonText={isResearch ? "Провести изыскание" : "Предложить улучшение"}
+            cost={2}
+            maxFiles={5}
+            maxFileSizeMB={10}
+            acceptedFileTypes=".txt,.docx,.pdf"
+            accentColor="accent-science"
+            icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--accent-science)] mb-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M12 18h.01"/><path d="M12 15h.01"/><path d="M12 12h.01"/><path d="m15 15-3-3 3-3"/></svg>}
+            remainingGenerations={remainingGenerations}
+            onSubmit={onScienceFileTaskSubmit}
+          />
+      );
   }
 
   // Thesis Flow
@@ -1722,44 +1781,48 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
 
   // Analysis Flow
   if (analysisStep === 'upload_form') {
-      return <FileUploadForm
-                title={docType}
-                description="Загрузите текст или документ для анализа."
-                promptLabel="Что именно нужно сделать?"
-                promptPlaceholder={docType === DocumentType.ANALYSIS_VERIFY ? "Например: 'Проверь факты в этом тексте' или 'Найди возможные противоречия'" : "Например: 'Выдели основные тезисы' или 'Сделай краткое саммари'"}
-                buttonText="Начать анализ"
-                cost={docType === DocumentType.ANALYSIS_VERIFY ? 3 : 2}
-                maxFiles={3} maxFileSizeMB={5} acceptedFileTypes=".txt,.doc,.docx"
-                accentColor="accent-analysis"
-                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><path d="M20 12V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m18 16-2-2-2 2"/><path d="m16 14-2 2-2-2"/></svg>}
-                remainingGenerations={remainingGenerations}
-                onSubmit={onAnalysisSubmit}
-            />;
+      const isVerify = docType === DocumentType.ANALYSIS_VERIFY;
+      return (
+        <FileUploadForm
+            title={isVerify ? "Проверка достоверности" : "Кратко по сути"}
+            description={isVerify ? "Загрузите текст или статьи для проверки фактов и поиска противоречий." : "Загрузите объемный документ, чтобы получить краткую выжимку."}
+            promptLabel="Уточнения к задаче (необязательно)"
+            promptPlaceholder={isVerify ? "Например: 'Обрати особое внимание на статистику'": "Например: 'Выдели ключевые решения и ответственных'"}
+            buttonText={isVerify ? "Проверить" : "Сделать выжимку"}
+            cost={isVerify ? 3 : 2}
+            maxFiles={5}
+            maxFileSizeMB={10}
+            acceptedFileTypes=".txt,.docx,.pdf"
+            accentColor="accent-analysis"
+            icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--accent-analysis)] mb-2"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>}
+            remainingGenerations={remainingGenerations}
+            onSubmit={onAnalysisSubmit}
+        />
+      )
   }
-  
+
   // Forecasting Flow
-  if (forecastingStep === 'form') {
-      return <ForecastingForm onSubmit={onForecastSubmit} />;
-  }
+  if (forecastingStep === 'form') return <ForecastingForm onSubmit={onForecastSubmit} />;
 
   // Code Flow
   if (codeStep === 'form') return <CodeGenerationForm onSubmit={onCodeSubmit} />;
-  if (codeStep === 'review' && codeAnalysis && codeRequest) {
-    return <CodeAnalysisReview 
-        analysis={codeAnalysis} 
-        request={codeRequest}
-        onGenerate={onGenerateCode}
-        onCancel={onCancelCodeAnalysis}
-        remainingGenerations={remainingGenerations}
-    />;
+  if (codeStep === 'review' && codeRequest && codeAnalysis) {
+      return (
+        <CodeAnalysisReview 
+            analysis={codeAnalysis}
+            request={codeRequest}
+            onConfirm={onGenerateCode}
+            onCancel={onCancelCodeAnalysis}
+            remainingGenerations={remainingGenerations}
+        />
+      );
   }
-  
-  // Default Idle View
+
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center p-4">
-        <h3 className="text-xl font-semibold">Готов к работе</h3>
+    <div className="flex flex-col items-center justify-center h-full text-center">
+        <h3 className="text-xl font-semibold text-[var(--text-dark-primary)]">Сервис готов к работе</h3>
         <p className="mt-2 text-sm text-[var(--text-dark-secondary)] max-w-sm">
-            Выберите необходимый вам сервис в левой панели, заполните поля, и я сгенерирую для вас результат.
+            Выберите категорию и тип документа в панели слева, чтобы начать.
         </p>
     </div>
   );

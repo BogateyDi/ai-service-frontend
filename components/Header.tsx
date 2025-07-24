@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { AppView } from '../types';
+import { AppView } from '../types.ts';
 
 interface HeaderProps {
   onNavigate: (view: AppView) => void;

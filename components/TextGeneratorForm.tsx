@@ -2,6 +2,7 @@
 
 
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
     STUDENT_DOC_TYPES_STANDARD,
@@ -10,9 +11,9 @@ import {
     ADULT_CATEGORIES, 
     DOC_TYPES_BY_ADULT_CATEGORY,
     ANALYSIS_DOC_TYPES
-} from '../constants';
-import { DocumentType, AstrologyStep, BookWritingStep, FileTaskStep, BusinessStep, CreativeStep, ScienceStep, CodeStep, ThesisStep, ScienceFileStep, PersonalAnalysisStep, DocAnalysisStep, ConsultationStep, TutorStep, AnalysisStep, ForecastingStep } from '../types';
-import { VerticalSelector } from './VerticalSelector';
+} from '../constants.ts';
+import { DocumentType, AstrologyStep, BookWritingStep, FileTaskStep, BusinessStep, CreativeStep, ScienceStep, CodeStep, ThesisStep, ScienceFileStep, PersonalAnalysisStep, DocAnalysisStep, ConsultationStep, TutorStep, AnalysisStep, ForecastingStep } from '../types.ts';
+import { VerticalSelector } from './VerticalSelector.tsx';
 import { toast } from 'react-hot-toast';
 
 type Audience = 'children' | 'adults';
