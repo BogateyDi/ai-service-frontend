@@ -1651,7 +1651,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
   // Tutor Flow
   if (tutorStep === 'subject_selection') return <SubjectSelection onSelect={onSubjectSelect} />;
   if (tutorStep === 'chatting' && selectedSubject) {
-    const tutorSpecialist = { id: 'tutor', name: `Репетитор: ${selectedSubject}`, description: '', category: 'Другие сферы', systemInstruction: '' };
+    const tutorSpecialist: Specialist = { id: 'tutor', name: `Репетитор: ${selectedSubject}`, description: '', category: 'Другие сферы', systemInstruction: '' };
     return <ChatWindow specialist={tutorSpecialist} messages={tutorChatMessages} onSendMessage={onTutorSendMessage} isLoading={isLoading} />;
   }
   
