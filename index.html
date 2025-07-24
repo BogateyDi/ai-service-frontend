@@ -98,56 +98,30 @@
       }
     </style>
     
-    <!-- SystemJS: A more robust in-browser module loader and transpiler setup -->
-    <script src="https://unpkg.com/systemjs@6.15.1/dist/s.min.js"></script>
-    <script src="https://unpkg.com/systemjs-plugin-babel@0.0.25/plugin-babel.js"></script>
-    
-    <script>
-      System.config({
-        transpiler: 'plugin-babel',
-        map: {
-          'plugin-babel': 'https://unpkg.com/systemjs-plugin-babel@0.0.25/plugin-babel.js',
-          'systemjs-babel-build': 'https://unpkg.com/systemjs-plugin-babel@0.0.25/systemjs-babel-browser.js',
-          
-          // Map dependencies
-          'react': 'https://esm.sh/react@19.1.0',
-          'react-dom/client': 'https://esm.sh/react-dom@19.1.0/client',
-          'react/jsx-runtime': 'https://esm.sh/react@19.1.0/jsx-runtime',
-          'react-hot-toast': 'https://esm.sh/react-hot-toast@2.5.2',
-          'mermaid': 'https://esm.sh/mermaid@11.9.0'
-        },
-        // Babel-specific options
-        babelOptions: {
-          react: true,
-          typescript: true
-        },
-        // Meta configuration to tell SystemJS to use the babel transpiler for these files
-        meta: {
-          '*.tsx': { loader: 'plugin-babel' },
-          '*.ts': { loader: 'plugin-babel' }
-        }
-      });
-    </script>
-<script type="importmap">
+    <!-- Step 1: Add Babel Standalone for in-browser transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Step 2: Use a native import map to define dependencies -->
+    <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.1.0",
+    "react": "https://esm.sh/react@19.1.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.1.0/client",
+    "react/jsx-runtime": "https://esm.sh/react@19.1.0/jsx-runtime",
+    "react-hot-toast": "https://esm.sh/react-hot-toast@2.5.2",
+    "mermaid": "https://esm.sh/mermaid@11.9.0",
     "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react-hot-toast": "https://esm.sh/react-hot-toast@^2.5.2",
-    "mermaid": "https://esm.sh/mermaid@^11.9.0"
+    "react/": "https://esm.sh/react@^19.1.0/"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
-    <!-- Use SystemJS to import the main application file -->
-    <script>
-      System.import('./index.tsx')
-        .catch(function(err) { 
-            console.error("SystemJS Error:", err); 
-        });
-    </script>
+    
+    <!-- Step 3: Load the entry point script using type="text/babel" -->
+    <!-- data-type="module" is crucial for Babel to handle ES imports/exports -->
+    <script type="text/babel" data-type="module" src="./index.tsx"></script>
+
   </body>
 </html>
