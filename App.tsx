@@ -1,7 +1,6 @@
 
 
 
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { GeneratorView } from './components/GeneratorView';
@@ -12,14 +11,13 @@ import { PurchaseSuccessModal } from './components/PurchaseSuccessModal';
 import { AppView, GenerationPackage, UserAccount, ChatMessage, GenerationRecord, DocumentType, GenerationResult, FavoriteService } from './types';
 import { Toaster, toast } from 'react-hot-toast';
 import { Footer } from './components/Footer';
-import { sendStatelessMessage } from './services/geminiService';
+import { sendMessage } from './services/geminiService';
 import { GenerationProgressModal } from './components/GenerationProgressModal';
 
 
 const CHAT_HISTORY_LIMIT = 50;
 const GENERATION_HISTORY_LIMIT = 20;
 const DEFAULT_STORAGE_LIMIT_BYTES = 1 * 1024 * 1024; // 1 MB
-const API_URL = 'https://ai-service-backend.onrender.com';
 
 // New component for the background effect
 const MatrixBackground: React.FC<{ isAnimating: boolean }> = ({ isAnimating }) => {
@@ -367,162 +365,81 @@ export default function App() {
     setIsPurchaseSuccessModalOpen(true);
   }, []);
 
-  const _creditUserWithGenerations = useCallback((userCodeToCredit: string, generations: number, referralBonus: number) => {
-    setUserAccounts(prev => {
-        const updatedAccounts = new Map(prev);
-        const account = updatedAccounts.get(userCodeToCredit);
-        if (account) {
-            const updatedAccount = { ...account, generations: account.generations + generations };
-            updatedAccounts.set(userCodeToCredit, updatedAccount);
+  const handlePurchase = useCallback((pkg: GenerationPackage) => {
+    const REFERRAL_BONUS = pkg.generations;
+
+    if (currentUserCode) { // Existing user topping up
+      setUserAccounts(prev => {
+          const updatedAccounts = new Map(prev);
+          const account = updatedAccounts.get(currentUserCode);
+          if (account) {
+            const updatedAccount = { ...account, generations: account.generations + pkg.generations };
+            updatedAccounts.set(currentUserCode, updatedAccount);
 
             if (account.referrerCode && updatedAccounts.has(account.referrerCode)) {
                 const referrerAccount = updatedAccounts.get(account.referrerCode)!;
                 const updatedReferrerAccount: UserAccount = {
                     ...referrerAccount,
-                    generations: referrerAccount.generations + referralBonus,
+                    generations: referrerAccount.generations + REFERRAL_BONUS,
                 };
                 updatedAccounts.set(account.referrerCode, updatedReferrerAccount);
-                setTimeout(() => toast.success(`Ваш друг получил бонус ${referralBonus} генераций!`, { duration: 4000 }), 500);
+                setTimeout(() => toast.success(`Ваш друг получил бонус ${REFERRAL_BONUS} генераций!`, { duration: 4000 }), 500);
             }
-        }
-        return updatedAccounts;
-    });
-    toast.success(`Баланс успешно пополнен на ${generations} генераций!`);
-    setView(AppView.GENERATOR);
-  }, []);
-
-  const _creditUserWithAssistant = useCallback((userCodeToCredit: string, assistant: 'mirra' | 'dary') => {
-      const ASSISTANT_BONUS = 250;
-      const isMirra = assistant === 'mirra';
-
-      setUserAccounts(prev => {
-          const updatedAccounts = new Map(prev);
-          const currentAccount = updatedAccounts.get(userCodeToCredit);
-          if (currentAccount) {
-              const updatedAccount: UserAccount = {
-                  ...currentAccount,
-                  generations: currentAccount.generations + ASSISTANT_BONUS,
-                  hasMirra: currentAccount.hasMirra || isMirra,
-                  hasDary: currentAccount.hasDary || !isMirra,
-              };
-              updatedAccounts.set(userCodeToCredit, updatedAccount);
-
-              if (currentAccount.referrerCode && updatedAccounts.has(currentAccount.referrerCode)) {
-                  const referrerAccount = updatedAccounts.get(currentAccount.referrerCode)!;
-                  const updatedReferrerAccount: UserAccount = {
-                      ...referrerAccount,
-                      generations: referrerAccount.generations + ASSISTANT_BONUS,
-                  };
-                  updatedAccounts.set(currentAccount.referrerCode, updatedReferrerAccount);
-                  setTimeout(() => toast.success(`Ваш друг получил бонус ${ASSISTANT_BONUS} генераций!`, { duration: 4000 }), 500);
-              }
           }
           return updatedAccounts;
       });
-
-      toast.success(`Ассистент "${isMirra ? 'Миррая' : 'Дарий'}" приобретен! Вам начислено ${ASSISTANT_BONUS} бонусных генераций.`);
-      setView(AppView.ASSISTANT);
-      setActiveAssistant(assistant);
-  }, []);
-
-  // --- Payment Flow ---
-  const handlePurchase = useCallback(async (pkg: GenerationPackage) => {
-      try {
-          const res = await fetch(`${API_URL}/api/create-payment`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ item: pkg, userCode: currentUserCode })
-          });
-          if (!res.ok) {
-              const error = await res.json();
-              throw new Error(error.error || 'Ошибка сервера');
-          }
-          const { confirmationUrl, paymentId } = await res.json();
-          sessionStorage.setItem('pendingPaymentId', paymentId);
-          window.location.href = confirmationUrl;
-      } catch (error) {
-          console.error(error);
-          toast.error(`Не удалось создать платеж: ${error.message}`);
-      }
-  }, [currentUserCode]);
+      toast.success(`Баланс успешно пополнен на ${pkg.generations} генераций!`);
+      setView(AppView.GENERATOR);
+    } else { // New user registration
+      _registerNewUser(pkg.generations, false, false);
+    }
+  }, [currentUserCode, _registerNewUser]);
   
-  const handleAssistantPurchase = useCallback(async (assistant: 'mirra' | 'dary') => {
-      if ((assistant === 'mirra' && hasMirra) || (assistant === 'dary' && hasDary)) {
-          toast.error(`У вас уже есть этот ассистент.`);
-          return;
-      }
-      try {
-          const res = await fetch(`${API_URL}/api/create-payment`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ item: { assistant }, userCode: currentUserCode })
-          });
-          if (!res.ok) {
-              const error = await res.json();
-              throw new Error(error.error || 'Ошибка сервера');
-          }
-          const { confirmationUrl, paymentId } = await res.json();
-          sessionStorage.setItem('pendingPaymentId', paymentId);
-          window.location.href = confirmationUrl;
-      } catch (error) {
-          console.error(error);
-          toast.error(`Не удалось создать платеж: ${error.message}`);
-      }
-  }, [currentUserCode, hasMirra, hasDary]);
-  
-  useEffect(() => {
-    const verifyPayment = async () => {
-        const paymentId = sessionStorage.getItem('pendingPaymentId');
-        if (!paymentId) {
+  const handleAssistantPurchase = useCallback((assistant: 'mirra' | 'dary') => {
+    const ASSISTANT_BONUS = 250;
+    const isMirra = assistant === 'mirra';
+
+    if (currentUserCode) { // Existing user buys an assistant
+        const account = userAccounts.get(currentUserCode);
+        if ((isMirra && account?.hasMirra) || (!isMirra && account?.hasDary)) {
+            toast.error(`У вас уже есть ассистент "${isMirra ? 'Миррая' : 'Дарий'}".`);
             return;
         }
 
-        const toastId = toast.loading('Проверяем статус платежа...');
-        try {
-            const res = await fetch(`${API_URL}/api/check-payment?paymentId=${paymentId}`);
-            if (!res.ok) throw new Error('Ошибка сервера при проверке платежа.');
+        setUserAccounts(prev => {
+            const updatedAccounts = new Map(prev);
+            const currentAccount = updatedAccounts.get(currentUserCode);
+            if (currentAccount) {
+                const updatedAccount: UserAccount = {
+                    ...currentAccount,
+                    generations: currentAccount.generations + ASSISTANT_BONUS,
+                    hasMirra: currentAccount.hasMirra || isMirra,
+                    hasDary: currentAccount.hasDary || !isMirra,
+                };
+                updatedAccounts.set(currentUserCode, updatedAccount);
 
-            const { status, metadata } = await res.json();
-            
-            toast.dismiss(toastId);
-
-            if (status === 'succeeded') {
-                toast.success('Оплата прошла успешно! Зачисляем...');
-                
-                if (metadata.purchaseType === 'package') {
-                    const pkg: GenerationPackage = { name: metadata.packageName, generations: metadata.generations, price: '' };
-                    if (metadata.userCode) {
-                         _creditUserWithGenerations(metadata.userCode, pkg.generations, pkg.generations);
-                    } else {
-                        _registerNewUser(pkg.generations, false, false);
-                    }
-                } else if (metadata.purchaseType === 'assistant') {
-                    const assistant = metadata.assistantType;
-                    if (metadata.userCode) {
-                        _creditUserWithAssistant(metadata.userCode, assistant);
-                    } else {
-                        _registerNewUser(250, assistant === 'mirra', assistant === 'dary');
-                    }
+                if (currentAccount.referrerCode && updatedAccounts.has(currentAccount.referrerCode)) {
+                    const referrerAccount = updatedAccounts.get(currentAccount.referrerCode)!;
+                    const updatedReferrerAccount: UserAccount = {
+                        ...referrerAccount,
+                        generations: referrerAccount.generations + ASSISTANT_BONUS,
+                    };
+                    updatedAccounts.set(currentAccount.referrerCode, updatedReferrerAccount);
+                    setTimeout(() => toast.success(`Ваш друг получил бонус ${ASSISTANT_BONUS} генераций!`, { duration: 4000 }), 500);
                 }
-            } else if (status === 'canceled') {
-                toast.error('Платеж был отменен.');
-            } else if (status === 'pending') {
-                toast('Платеж еще в обработке.', { icon: '⏳' });
             }
-        } catch (error) {
-            console.error(error);
-            toast.dismiss(toastId);
-            toast.error('Не удалось проверить статус платежа.');
-        } finally {
-            sessionStorage.removeItem('pendingPaymentId');
-            // Clean URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-    };
+            return updatedAccounts;
+        });
 
-    verifyPayment();
-  }, [_registerNewUser, _creditUserWithGenerations, _creditUserWithAssistant]);
-  
+        toast.success(`Ассистент "${isMirra ? 'Миррая' : 'Дарий'}" приобретен! Вам начислено ${ASSISTANT_BONUS} бонусных генераций.`);
+        setView(AppView.ASSISTANT);
+        setActiveAssistant(assistant);
+
+    } else { // New user registration by buying an assistant
+        _registerNewUser(ASSISTANT_BONUS, isMirra, !isMirra);
+    }
+  }, [currentUserCode, userAccounts, _registerNewUser]);
+
   const useGeneration = useCallback((cost: number = 1) => {
     if (!currentUserCode) {
         toast.error(`Пожалуйста, войдите или приобретите пакет для начала работы.`);
@@ -671,14 +588,21 @@ export default function App() {
     setLoading(true);
 
     try {
-        const historyForApi = settings.memoryEnabled ? history : [];
+        const { memoryEnabled, internetEnabled } = settings;
+        const historyForApi = memoryEnabled ? history : [];
         
         let attachment: GenerationRecord | undefined;
         if (userMessage.sharedGenerationId) {
             attachment = (currentAccount.generationHistory || []).find(r => r.id === userMessage.sharedGenerationId);
         }
 
-        const result = await sendStatelessMessage(assistant, historyForApi, userMessage.text, settings, attachment);
+        const chatContext = {
+            assistant,
+            history: historyForApi,
+            settings: { internetEnabled, memoryEnabled }
+        };
+
+        const result = await sendMessage(chatContext, userMessage.text, attachment);
         
         const totalChars = message.text.length + result.text.length + (attachment?.text.length || 0);
         const cost = Math.max(1, Math.ceil(totalChars / 5000));
@@ -703,7 +627,7 @@ export default function App() {
             const updatedAccount: UserAccount = { 
                 ...account,
                 generations: account.generations - cost,
-                [historyKey]: settings.memoryEnabled ? finalHistory : account[historyKey],
+                [historyKey]: memoryEnabled ? finalHistory : account[historyKey],
             };
             
             // Storage limit check

@@ -1,6 +1,5 @@
 
 
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { TextGeneratorForm } from './TextGeneratorForm';
 import { ResultDisplay, ResultViewer } from './ResultDisplay';
@@ -27,8 +26,7 @@ import {
     generateMarketingCopy, rewriteText, generateArticlePlan, generateSingleArticleSection, 
     generateCode, analyzeCodeTask, generateFullThesis, analyzeScienceTaskFromFiles,
     analyzeCreativeTaskFromFiles, generatePersonalAnalysis, analyzeUserDocuments,
-    startChatSession,
-    sendMessageInSession, generateGrantPlan, generateAudioScript, performAnalysis,
+    sendSpecialistMessage, generateGrantPlan, generateAudioScript, performAnalysis,
     generateForecasting,
     convertMermaidToTable
 } from '../services/geminiService';
@@ -144,12 +142,10 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
 
   // Consultation state
   const [selectedSpecialist, setSelectedSpecialist] = useState<Specialist | null>(null);
-  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   
   // Tutor state
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [tutorChatSessionId, setTutorChatSessionId] = useState<string | null>(null);
   const [tutorChatMessages, setTutorChatMessages] = useState<ChatMessage[]>([]);
 
   const resetAllFlows = useCallback(() => {
@@ -179,10 +175,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
       setCodeRequest(null);
       setAudioScriptRequest({});
       setSelectedSpecialist(null);
-      setChatSessionId(null);
       setChatMessages([]);
       setSelectedSubject(null);
-      setTutorChatSessionId(null);
       setTutorChatMessages([]);
   }, [setResult]);
   
@@ -250,7 +244,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     if (useGeneration(1)) {
         handleGenerationStart("Создание текста...");
         try {
-            const res = await generateText(docType, topic, currentAge);
+            const res = await generateText(docType, topic, currentAge, setProgressMessage);
             setResult(res);
             onSaveGeneration({ docType, title: topic, text: res.text });
         } catch (err) {
@@ -333,7 +327,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
           handleGenerationStart('Составляем вашу натальную карту...');
           setAstrologyStep('generating');
           try {
-              const res = await generateNatalChart(data.date, data.time, data.place);
+              const res = await generateNatalChart(data.date, data.time, data.place, setProgressMessage);
               setResult(res);
               onSaveGeneration({ docType: DocumentType.ASTROLOGY, title: 'Натальная карта', text: res.text });
               setAstrologyStep('completed');
@@ -352,7 +346,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
           handleGenerationStart('Составляем ваш гороскоп...');
           setAstrologyStep('generating');
           try {
-              const res = await generateHoroscope(data.date);
+              const res = await generateHoroscope(data.date, setProgressMessage);
               setResult(res);
               onSaveGeneration({ docType: DocumentType.ASTROLOGY, title: 'Гороскоп', text: res.text });
               setAstrologyStep('completed');
@@ -376,7 +370,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
       if (useGeneration(1)) {
           handleGenerationStart('Создаем план вашей будущей книги...');
           try {
-              const plan = await generateBookPlan(request);
+              const plan = await generateBookPlan(request, setProgressMessage);
               setBookPlan({ ...plan, genre: request.genre, style: request.style, readerAge: request.readerAge });
               setBookWritingStep('plan_review');
           } catch (err) {
@@ -452,7 +446,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
           handleGenerationStart('Проводим личностный анализ...');
           setPersonalAnalysisStep('generating');
           try {
-              const res = await generatePersonalAnalysis(request);
+              const res = await generatePersonalAnalysis(request, setProgressMessage);
               setResult(res);
               onSaveGeneration({ docType: DocumentType.PERSONAL_ANALYSIS, title: `Анализ: "${request.userPrompt.slice(0, 40)}..."`, text: res.text });
               setPersonalAnalysisStep('completed');
@@ -483,7 +477,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             handleGenerationStart('Анализируем ваши документы...');
             setDocAnalysisStep('generating');
             try {
-                const res = await analyzeUserDocuments(files, prompt);
+                const res = await analyzeUserDocuments(files, prompt, setProgressMessage);
                 setResult(res);
                 onSaveGeneration({ docType: DocumentType.DOCUMENT_ANALYSIS, title: `Анализ документов: "${prompt.slice(0, 40)}..."`, text: res.text });
                 setDocAnalysisStep('completed');
@@ -507,35 +501,28 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setConsultationStep('selection');
     }, [resetAllFlows, remainingGenerations]);
     
-    const handleSpecialistSelect = useCallback(async (specialist: Specialist) => {
-        try {
-            const newChatId = await startChatSession({ specialist });
-            setChatSessionId(newChatId);
-            setSelectedSpecialist(specialist);
-            setChatMessages([{
-                role: 'model',
-                text: `Здравствуйте! Я ваш виртуальный ассистент в роли "${specialist.name.toLowerCase()}". Чем могу помочь?`
-            }]);
-            setConsultationStep('chatting');
-        } catch(err) {
-            const msg = err instanceof Error ? err.message : JSON.stringify(err);
-            setError(msg);
-            toast.error("Не удалось начать чат. " + msg);
-        }
+    const handleSpecialistSelect = useCallback((specialist: Specialist) => {
+        setSelectedSpecialist(specialist);
+        setChatMessages([{
+            role: 'model',
+            text: `Здравствуйте! Я ваш виртуальный ассистент в роли "${specialist.name.toLowerCase()}". Чем могу помочь?`
+        }]);
+        setConsultationStep('chatting');
     }, []);
 
     const handleSendMessage = useCallback(async (messageText: string) => {
-        if (!chatSessionId) {
+        if (!selectedSpecialist) {
             setError("Сессия чата неактивна. Пожалуйста, начните заново.");
             return;
         }
         if (useGeneration(1)) {
             setIsLoading(true);
             const userMessage: ChatMessage = { role: 'user', text: messageText };
-            setChatMessages(prev => [...prev, userMessage]);
+            const newHistory = [...chatMessages, userMessage];
+            setChatMessages(newHistory);
             
             try {
-                const result = await sendMessageInSession(chatSessionId, messageText);
+                const result = await sendSpecialistMessage({ specialist: selectedSpecialist, history: newHistory }, messageText);
                 const modelMessage: ChatMessage = { role: 'model', text: result.text, sources: result.sources };
                 setChatMessages(prev => [...prev, modelMessage]);
             } catch (err) {
@@ -546,7 +533,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
                 setIsLoading(false);
             }
         }
-    }, [chatSessionId, useGeneration]);
+    }, [selectedSpecialist, chatMessages, useGeneration]);
 
   // --- Tutor Flow ---
     const handleStartTutor = useCallback(() => {
@@ -558,33 +545,48 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setTutorStep('subject_selection');
     }, [resetAllFlows, remainingGenerations]);
 
-    const handleSubjectSelect = useCallback(async (subject: string) => {
-        try {
-            const newChatId = await startChatSession({ tutorSubject: subject, age });
-            setTutorChatSessionId(newChatId);
-            setSelectedSubject(subject);
-            
-            const introMessage = `Привет! Я твой личный репетитор по предмету "${subject}". Очень рад нашему знакомству! 😊\n\nТы можешь задавать мне любые вопросы по этой теме, просить объяснить сложный материал или помочь с домашним заданием. Мы будем разбираться во всем вместе, шаг за шагом. Не стесняйся спрашивать, если что-то непонятно! \n\nС чего начнем?`;
-            setTutorChatMessages([{ role: 'model', text: introMessage }]);
-            setTutorStep('chatting');
-        } catch(err) {
-            const msg = err instanceof Error ? err.message : JSON.stringify(err);
-            setError(msg);
-            toast.error("Не удалось начать чат. " + msg);
-        }
-    }, [age]);
+    const handleSubjectSelect = useCallback((subject: string) => {
+        setSelectedSubject(subject);
+        const introMessage = `Привет! Я твой личный репетитор по предмету "${subject}". Очень рад нашему знакомству! 😊\n\nТы можешь задавать мне любые вопросы по этой теме, просить объяснить сложный материал или помочь с домашним заданием. Мы будем разбираться во всем вместе, шаг за шагом. Не стесняйся спрашивать, если что-то непонятно! \n\nС чего начнем?`;
+        setTutorChatMessages([{ role: 'model', text: introMessage }]);
+        setTutorStep('chatting');
+    }, []);
 
     const handleTutorSendMessage = useCallback(async (messageText: string) => {
-        if (!tutorChatSessionId) {
+        if (!selectedSubject) {
             setError("Сессия с репетитором неактивна. Пожалуйста, начните заново.");
             return;
         }
         if (useGeneration(1)) {
             setIsLoading(true);
             const userMessage: ChatMessage = { role: 'user', text: messageText };
-            setTutorChatMessages(prev => [...prev, userMessage]);
+            const newHistory = [...tutorChatMessages, userMessage];
+            setTutorChatMessages(newHistory);
+
+            const systemInstruction = `Вы — «Репетитор-Помощник», дружелюбный и очень терпеливый наставник по предмету **${selectedSubject}**. Ваша задача — помогать ученику (возраст: **${age}** лет) понять материал, а не просто давать готовые ответы.
+
+**Ваша личность и стиль общения:**
+1.  **Дружелюбие и Поддержка:** Вы всегда обращаетесь к ученику в ободряющей и позитивной манере. Используйте слова "Отлично!", "Хороший вопрос!", "Давай разберемся вместе". Ваша цель — создать безопасное пространство, где ученик не боится ошибаться.
+2.  **Адаптация под возраст:** Ваш язык и примеры должны быть понятны ребенку ${age} лет. Избегайте слишком сложных терминов. Если используете термин, сразу объясняйте его простым языком.
+3.  **Интерактивность:** Задавайте встречные вопросы, чтобы проверить понимание. Например: "Как ты думаешь, почему это так работает?", "Можешь привести свой пример?".
+4.  **Человечность:** Будьте учтивым и открытым. Помогайте ребенку не только с предметом, но и с развитием любознательности.
+
+**Ваш рабочий процесс:**
+1.  **Объяснение на примерах:** Когда объясняете тему, всегда используйте наглядные примеры из жизни или простые аналогии, понятные ребенку.
+2.  **Пошаговый подход:** Если ученик просит решить задачу, не давайте ответ сразу. Разбейте решение на маленькие шаги и ведите ученика по ним.
+3.  **Возвращение к теме:** Если ученик чего-то не понял, будьте готовы вернуться и объяснить тему заново, но уже с другими примерами или с другой стороны.
+4.  **Обработка файлов:** Если ученик загружает файл (фото задачи, документ), проанализируйте его и обсуждайте его содержимое в контексте вашего диалога.`;
+
+        const tutorAsSpecialist: Specialist = {
+            id: `tutor-${selectedSubject.toLowerCase()}`,
+            name: `Репетитор по ${selectedSubject}`,
+            description: `Ваш личный репетитор по предмету: ${selectedSubject}`,
+            category: 'Другие сферы',
+            systemInstruction: systemInstruction,
+        };
+            
             try {
-                const result = await sendMessageInSession(tutorChatSessionId, messageText);
+                const result = await sendSpecialistMessage({ specialist: tutorAsSpecialist, history: newHistory }, messageText);
                 const modelMessage: ChatMessage = { role: 'model', text: result.text, sources: result.sources };
                 setTutorChatMessages(prev => [...prev, modelMessage]);
             } catch (err) {
@@ -595,7 +597,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
                 setIsLoading(false);
             }
         }
-    }, [tutorChatSessionId, useGeneration]);
+    }, [selectedSubject, tutorChatMessages, useGeneration, age]);
 
 
   // --- File Task (HW/CR) Flow ---
@@ -614,7 +616,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             handleGenerationStart('Решаем вашу задачу...');
             setFileTaskStep('generating');
             try {
-                const res = await solveTaskFromFiles(files, prompt, docType);
+                const res = await solveTaskFromFiles(files, prompt, docType, setProgressMessage);
                 setResult(res);
                 onSaveGeneration({ docType, title: `${docType}: ${(prompt || 'Файлы без темы')}`, text: res.text });
                 setFileTaskStep('completed');
@@ -646,7 +648,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         handleGenerationStart('Проводим SWOT-анализ...');
         setBusinessStep('generating');
         try {
-            const res = await generateSwotAnalysis(request);
+            const res = await generateSwotAnalysis(request, setProgressMessage);
             setResult(res);
             onSaveGeneration({ docType: DocumentType.SWOT_ANALYSIS, title: `SWOT: ${request.description.slice(0, 50)}...`, text: res.text });
             setBusinessStep('completed');
@@ -665,7 +667,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         handleGenerationStart('Составляем коммерческое предложение...');
         setBusinessStep('generating');
         try {
-            const res = await generateCommercialProposal(request);
+            const res = await generateCommercialProposal(request, setProgressMessage);
             setResult(res);
             onSaveGeneration({ docType: DocumentType.COMMERCIAL_PROPOSAL, title: `КП для: ${request.client}`, text: res.text });
             setBusinessStep('completed');
@@ -683,7 +685,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     if (useGeneration(2)) {
         handleGenerationStart('Создаем структуру бизнес-плана...');
         try {
-            const plan = await generateBusinessPlan(request);
+            const plan = await generateBusinessPlan(request, setProgressMessage);
             setBusinessPlan({ ...plan, industry: request.industry });
             setBusinessStep('plan_review');
         } catch (err) {
@@ -747,7 +749,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
       handleGenerationStart(`Создаем: ${request.copyType}...`);
       setBusinessStep('generating');
       try {
-        const res = await generateMarketingCopy(request);
+        const res = await generateMarketingCopy(request, setProgressMessage);
         setResult(res);
         onSaveGeneration({ docType: DocumentType.MARKETING_COPY, title: `${request.copyType}: ${request.product}`, text: res.text });
         setBusinessStep('completed');
@@ -795,7 +797,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         handleGenerationStart('Перерабатываем ваш текст...');
         setCreativeStep('generating');
         try {
-            const res = await rewriteText(request, file);
+            const res = await rewriteText(request, file, setProgressMessage);
             setResult(res);
             onSaveGeneration({ docType: DocumentType.TEXT_REWRITING, title: `Переработка текста (Цель: ${request.goal})`, text: res.text });
             setCreativeStep('completed');
@@ -815,7 +817,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         handleGenerationStart('Анализируем ваши материалы...');
         setCreativeStep('generating');
         try {
-            const res = await analyzeCreativeTaskFromFiles(files, text, prompt, docType);
+            const res = await analyzeCreativeTaskFromFiles(files, text, prompt, docType, setProgressMessage);
             setResult(res);
             onSaveGeneration({ docType, title: `${docType}: ${(prompt || 'Анализ материалов')}`, text: res.text });
             setCreativeStep('completed');
@@ -853,7 +855,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
           handleGenerationStart('Создаем ваш аудио-сценарий...');
           setCreativeStep('generating');
           try {
-              const res = await generateAudioScript(fullRequest);
+              const res = await generateAudioScript(fullRequest, setProgressMessage);
               setResult(res);
               onSaveGeneration({ docType: DocumentType.AUDIO_SCRIPT, title: `Аудио-скрипт: ${fullRequest.topic.slice(0, 40)}...`, text: res.text });
               setCreativeStep('completed');
@@ -885,8 +887,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
           handleGenerationStart(isGrant ? 'Создаем структуру для гранта...' : 'Создаем структуру научной статьи...');
           try {
               const plan = isGrant
-                ? await generateGrantPlan(request, file)
-                : await generateArticlePlan(request);
+                ? await generateGrantPlan(request, file, setProgressMessage)
+                : await generateArticlePlan(request, setProgressMessage);
 
               setArticlePlan({ ...plan, field: request.field });
               setScienceStep('plan_review');
@@ -962,7 +964,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         handleGenerationStart('Анализируем ваши научные материалы...');
         setScienceFileStep('generating');
         try {
-            const res = await analyzeScienceTaskFromFiles(files, prompt, docType);
+            const res = await analyzeScienceTaskFromFiles(files, prompt, docType, setProgressMessage);
             setResult(res);
             onSaveGeneration({ docType, title: `${docType}: ${(prompt || 'Анализ файлов')}`, text: res.text });
             setScienceFileStep('completed');
@@ -996,7 +998,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         handleGenerationStart('Начинаем работу над дипломной работой...');
         setThesisStep('generating');
         try {
-            const res = await generateFullThesis(topic, field, sections);
+            const res = await generateFullThesis(topic, field, sections, setProgressMessage);
             setResult(res);
             onSaveGeneration({ docType: DocumentType.THESIS, title: `Диплом: ${topic}`, text: res.text });
             setThesisStep('completed');
@@ -1026,7 +1028,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             handleGenerationStart('Анализируем вашу задачу...');
             setCodeStep('generating');
             try {
-                const analysis = await analyzeCodeTask(request);
+                const analysis = await analyzeCodeTask(request, setProgressMessage);
                 setCodeAnalysis(analysis);
                 setCodeRequest(request);
                 setCodeStep('review');
@@ -1050,7 +1052,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             handleGenerationStart('Генерация кода...');
             setCodeStep('generating');
             try {
-                const res = await generateCode(codeRequest);
+                const res = await generateCode(codeRequest, setProgressMessage);
                 setResult(res);
                 onSaveGeneration({ docType: DocumentType.CODE_GENERATION, title: `Код (${codeRequest.language}): ${codeRequest.taskDescription.slice(0, 40)}...`, text: res.text });
                 setCodeStep('completed');
@@ -1076,7 +1078,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             handleGenerationStart('Проводим анализ...');
             setAnalysisStep('generating');
             try {
-                const res = await performAnalysis(files, prompt, docType);
+                const res = await performAnalysis(files, prompt, docType, setProgressMessage);
                 setResult(res);
                 onSaveGeneration({ docType, title: `${docType}: ${(prompt || files[0]?.name || 'Анализ')}`, text: res.text });
                 setAnalysisStep('completed');
@@ -1106,7 +1108,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             handleGenerationStart('Собираем данные для прогноза...');
             setForecastingStep('generating');
             try {
-                const res = await generateForecasting(prompt);
+                const res = await generateForecasting(prompt, setProgressMessage);
                 setResult(res);
                 onSaveGeneration({ docType: DocumentType.FORECASTING, title: `Прогноз: ${prompt.slice(0, 40)}...`, text: res.text });
                 setForecastingStep('completed');

@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import mammoth from "mammoth";
 import { 
     GenerationResult, BookPlanRequest, BookPlan, AstrologyStep, BookWritingStep, 
     FileTaskStep, DocumentType, BusinessStep, SwotAnalysisRequest, 
@@ -1140,27 +1139,6 @@ const TextRewritingForm: React.FC<{ onSubmit: (request: TextRewritingRequest, fi
         setCost(Math.max(1, textCost + fileCost));
     }, [originalText, file]);
 
-    const readFileContent = async (selectedFile: File) => {
-        setIsReadingFile(true);
-        try {
-            if (selectedFile.name.endsWith('.docx')) {
-                const arrayBuffer = await selectedFile.arrayBuffer();
-                const { value } = await mammoth.extractRawText({ arrayBuffer });
-                setOriginalText(value);
-            } else if (selectedFile.name.endsWith('.txt') || selectedFile.type.startsWith('text/')) {
-                const text = await selectedFile.text();
-                setOriginalText(text);
-            }
-        } catch (error) {
-            console.error("Error reading file:", error);
-            toast.error('Не удалось прочитать файл.');
-            setOriginalText('');
-            setFile(null); // Clear file on error
-        } finally {
-            setIsReadingFile(false);
-        }
-    };
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (!selectedFile) return;
@@ -1177,8 +1155,6 @@ const TextRewritingForm: React.FC<{ onSubmit: (request: TextRewritingRequest, fi
         setFile(selectedFile);
         if (selectedFile.type.startsWith('image/')) {
             setOriginalText(''); // Clear text area if an image is uploaded
-        } else {
-            readFileContent(selectedFile);
         }
     };
     
@@ -1516,48 +1492,13 @@ const CodeGenerationForm: React.FC<{ onSubmit: (request: CodeGenerationRequest) 
     );
 };
 
-const CodeAnalysisReview: React.FC<{ analysis: CodeAnalysisResult, request: CodeGenerationRequest, onGenerate: () => void, onCancel: () => void, remainingGenerations: number }> = ({ analysis, request, onGenerate, onCancel, remainingGenerations }) => {
-    const canAfford = remainingGenerations >= analysis.cost;
-    return (
-        <div className="flex flex-col h-full text-left p-2">
-            <h3 className="text-xl font-semibold mb-2 text-center">Анализ задачи</h3>
-            <div className="flex-grow overflow-y-auto p-4 bg-gray-50 rounded-lg border-2 border-gray-200 space-y-4">
-                <div><h4 className="font-bold">Язык: <span className="font-normal">{request.language}</span></h4></div>
-                <div>
-                    <h4 className="font-bold">План реализации:</h4>
-                    <p className="whitespace-pre-wrap text-sm mt-1">{analysis.plan}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-2 bg-white rounded-md border border-gray-200">
-                        <p className="text-xs text-gray-500">Сложность</p>
-                        <p className="font-semibold">{analysis.complexity}</p>
-                    </div>
-                    <div className="text-center p-2 bg-white rounded-md border border-gray-200">
-                        <p className="text-xs text-gray-500">Стоимость</p>
-                        <p className="font-semibold">{analysis.cost} генераций</p>
-                    </div>
-                </div>
-            </div>
-            <div className="flex-shrink-0 pt-4 text-center">
-                {!canAfford && <p className="text-red-500 text-sm mb-2">Недостаточно генераций!</p>}
-                <div className="flex gap-3 justify-center">
-                    <button onClick={onCancel} className="w-full max-w-xs bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-lg transition-all hover:bg-gray-300">Отмена</button>
-                    <button onClick={onGenerate} disabled={!canAfford} className="w-full max-w-xs bg-[var(--accent-code)] text-white font-semibold py-3 px-4 rounded-lg transition-all hover:brightness-110 disabled:bg-gray-400">
-                        Сгенерировать код
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 const ForecastingForm: React.FC<{ onSubmit: (prompt: string) => void }> = ({ onSubmit }) => {
     const [prompt, setPrompt] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!prompt.trim()) {
-            toast.error("Пожалуйста, введите ваш вопрос для прогноза.");
+            toast.error("Пожалуйста, опишите, что нужно спрогнозировать.");
             return;
         }
         onSubmit(prompt);
@@ -1566,246 +1507,259 @@ const ForecastingForm: React.FC<{ onSubmit: (prompt: string) => void }> = ({ onS
     return (
         <form onSubmit={handleSubmit} className="flex flex-col h-full text-left p-2">
             <h3 className="text-xl font-semibold mb-2 text-center">Прогнозирование</h3>
-            <p className="text-sm text-center text-[var(--text-dark-secondary)] mb-4">AI проанализирует открытые данные для составления прогноза.</p>
+            <p className="text-sm text-center text-[var(--text-dark-secondary)] mb-4">Опишите задачу для прогноза на основе открытых данных.</p>
             <div className="flex-grow flex flex-col">
-                <label className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">Ваш вопрос</label>
                 <textarea 
                     value={prompt} 
                     onChange={e => setPrompt(e.target.value)} 
-                    placeholder="Например: 'Каким будет курс Биткоина к концу года?' или 'Кто победит в финале Лиги Чемпионов?'" 
-                    rows={8} 
+                    placeholder="Например: 'Каковы перспективы развития рынка электромобилей в России на ближайшие 5 лет?' или 'Спрогнозируй изменение туристических потоков в Европу после 2024 года.'"
+                    rows={10} 
                     className="w-full flex-grow bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent)] resize-none" />
             </div>
             <div className="flex-shrink-0 pt-4 text-center">
                 <p className="text-sm text-[var(--text-dark-secondary)] mb-3">Стоимость: 3 генерации</p>
                 <button type="submit" className="w-full max-w-sm bg-[var(--accent)] text-white font-semibold py-3 px-4 rounded-lg transition-all hover:bg-[var(--accent-light)]">
-                     Получить прогноз
+                     Сделать прогноз
                 </button>
             </div>
         </form>
     );
 };
 
-export const ResultDisplay: React.FC<ResultDisplayProps> = ({
-    result,
-    isLoading,
-    error,
-    isLoggedIn,
-    remainingGenerations,
-    hasMirra,
-    onShareWithMirra,
-    hasDary,
-    onShareWithDary,
-    onSaveGeneration,
-    onBuyGenerations,
-    useGeneration,
-    docType,
-    onConvertToTable,
-    astrologyStep,
-    onAstrologySelect,
-    onNatalSubmit,
-    onHoroscopeSubmit,
-    bookWritingStep,
-    bookPlan,
-    onPlanSubmit,
-    onGenerateBook,
-    personalAnalysisStep,
-    onPersonalAnalysisSubmit,
-    docAnalysisStep,
-    onDocAnalysisSubmit,
-    consultationStep,
-    onSpecialistSelect,
-    selectedSpecialist,
-    chatMessages,
-    onSendMessage,
-    tutorStep,
-    onSubjectSelect,
-    selectedSubject,
-    tutorChatMessages,
-    onTutorSendMessage,
-    fileTaskStep,
-    onFileTaskSubmit,
-    businessStep,
-    businessPlan,
-    onSwotSubmit,
-    onCommercialProposalSubmit,
-    onBusinessPlanSubmit,
-    onGenerateBusinessPlan,
-    onMarketingSubmit,
-    creativeStep,
-    onRewritingSubmit,
-    onCreativeFileTaskSubmit,
-    onAudioScriptTopicSubmit,
-    onAudioScriptSubmit,
-    audioScriptRequest,
-    scienceStep,
-    articlePlan,
-    onArticlePlanSubmit,
-    onGenerateArticle,
-    scienceFileStep,
-    onScienceFileTaskSubmit,
-    thesisStep,
-    onThesisSubmit,
-    analysisStep,
-    onAnalysisSubmit,
-    forecastingStep,
-    onForecastSubmit,
-    codeStep,
-    onCodeSubmit,
-    onGenerateCode,
-    codeAnalysis,
-    codeRequest,
-    onCancelCodeAnalysis
-}) => {
-    // Error handling first
-    if (error) {
-        if (error.includes('API key not valid') || error.includes('API_KEY_INVALID')) {
-            return <ApiKeyErrorDisplay />;
-        }
-        if (error.includes('quota')) { // Simple check for quota errors
-             return <QuotaErrorDisplay onBuyGenerations={onBuyGenerations} />;
-        }
-        return (
-            <div className="flex items-center justify-center h-full text-center text-red-800 bg-red-50 p-6 rounded-lg border-2 border-red-200">
-                <div className="max-w-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shield-x mx-auto mb-4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m14.5 9-5 5"/><path d="m9.5 9 5 5"/></svg>
-                    <h3 className="text-xl font-semibold">Произошла ошибка</h3>
-                    <p className="mt-2 text-sm text-red-700 bg-red-100 p-2 rounded font-mono break-all">{error}</p>
+const CodeAnalysisReview: React.FC<{ analysis: CodeAnalysisResult, request: CodeGenerationRequest, onGenerate: () => void, onCancel: () => void, remainingGenerations: number }> = ({ analysis, request, onGenerate, onCancel, remainingGenerations }) => {
+    const canAfford = remainingGenerations >= analysis.cost;
+
+    return (
+        <div className="flex flex-col h-full text-left p-2">
+            <h3 className="text-xl font-semibold mb-4 text-center">Анализ задачи: "{request.language}"</h3>
+            <div className="flex-grow space-y-4 overflow-y-auto pr-2 bg-gray-50 p-4 rounded-lg border">
+                <div>
+                    <h4 className="font-bold text-sm text-gray-700 mb-1">План выполнения:</h4>
+                    <p className="text-sm whitespace-pre-wrap">{analysis.plan}</p>
+                </div>
+                <div>
+                    <h4 className="font-bold text-sm text-gray-700 mb-1">Оценка сложности:</h4>
+                    <p className="text-sm">{analysis.complexity}</p>
+                </div>
+                <div>
+                    <h4 className="font-bold text-sm text-gray-700 mb-1">Стоимость генерации:</h4>
+                    <p className="text-lg font-bold text-[var(--accent-code)]">{analysis.cost} генераций</p>
                 </div>
             </div>
-        );
-    }
-    
-    // Result display
-    if (result && !isLoading) {
-        return <ResultViewer 
-            result={result} 
-            hasMirra={hasMirra}
-            onShareWithMirra={onShareWithMirra}
-            hasDary={hasDary}
-            onShareWithDary={onShareWithDary}
-            onSaveGeneration={onSaveGeneration}
-            isLoggedIn={isLoggedIn}
-            useGeneration={useGeneration}
-            onConvertToTable={onConvertToTable}
-        />;
-    }
-
-    // --- Special Flow rendering ---
-    if (astrologyStep === 'selection') return <AstrologySelection onSelect={onAstrologySelect} />;
-    if (astrologyStep === 'natal_form') return <NatalChartForm onSubmit={onNatalSubmit} />;
-    if (astrologyStep === 'horoscope_form') return <HoroscopeForm onSubmit={onHoroscopeSubmit} />;
-
-    if (bookWritingStep === 'form') return <BookPlanForm onSubmit={onPlanSubmit} />;
-    if (bookWritingStep === 'plan_review' && bookPlan) return <BookPlanReview initialPlan={bookPlan} onGenerate={onGenerateBook} />;
-
-    if (personalAnalysisStep === 'form') return <PersonalAnalysisForm onSubmit={onPersonalAnalysisSubmit} />;
-
-    if (docAnalysisStep === 'upload_form') return <FileUploadForm 
-        title="Доктор (Анализ документов)"
-        description="Загрузите до 5 файлов (DOCX, TXT, XLSX, PNG, JPG) для анализа. Вы можете задать конкретный вопрос или оставить поле пустым для общей выжимки."
-        promptLabel="Ваш запрос к документам (необязательно)"
-        promptPlaceholder="Например: 'Найди ключевые финансовые показатели за 2023 год' или 'Каковы основные риски, описанные в договоре?'"
-        buttonText="Проанализировать документы"
-        cost={2} maxFiles={5} maxFileSizeMB={10} acceptedFileTypes=".txt,.docx,.xlsx,.xls,.png,.jpeg,.jpg"
-        accentColor="accent-life"
-        icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18h.01"/><path d="M16 12h-4"/><path d="M12 12v6"/></svg>}
-        remainingGenerations={remainingGenerations}
-        onSubmit={onDocAnalysisSubmit}
-    />;
-
-    if (consultationStep === 'selection') return <SpecialistSelection onSelect={onSpecialistSelect} />;
-    if (consultationStep === 'chatting' && selectedSpecialist) return <ChatWindow specialist={selectedSpecialist} messages={chatMessages} onSendMessage={onSendMessage} isLoading={isLoading} />;
-    
-    if (tutorStep === 'subject_selection') return <SubjectSelection onSelect={onSubjectSelect} />;
-    if (tutorStep === 'chatting' && selectedSubject) return <ChatWindow specialist={{id: selectedSubject, name: `Репетитор по ${selectedSubject}`, description: '', category: 'Другие сферы', systemInstruction: ''}} messages={tutorChatMessages} onSendMessage={onTutorSendMessage} isLoading={isLoading} />;
-
-    const fileTaskTitle = docType === DocumentType.DO_HOMEWORK ? 'Сделать ДЗ' : 'Решить КР, ПР';
-    const fileTaskDesc = 'Загрузите файлы с вашим заданием (фото, документ). При необходимости добавьте текстовые пояснения.';
-    const fileTaskCost = docType === DocumentType.DO_HOMEWORK ? 2 : 1;
-
-    if (fileTaskStep === 'upload_form') return <FileUploadForm 
-        title={fileTaskTitle} description={fileTaskDesc} cost={fileTaskCost} maxFiles={5} maxFileSizeMB={10}
-        promptLabel="Дополнительные инструкции (необязательно)" promptPlaceholder="Например: 'Решить только задачи 1 и 3', 'Оформить по ГОСТу'"
-        buttonText="Решить задание" acceptedFileTypes=".txt,.docx,.png,.jpeg,.jpg" accentColor="accent"
-        icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>}
-        remainingGenerations={remainingGenerations} onSubmit={onFileTaskSubmit}
-    />;
-
-    if (businessStep === 'swot_form') return <SwotAnalysisForm onSubmit={onSwotSubmit} />;
-    if (businessStep === 'proposal_form') return <CommercialProposalForm onSubmit={onCommercialProposalSubmit} />;
-    if (businessStep === 'business_plan_form') return <BusinessPlanForm onSubmit={onBusinessPlanSubmit} />;
-    if (businessStep === 'plan_review' && businessPlan) return <BusinessPlanReview initialPlan={businessPlan} onGenerate={onGenerateBusinessPlan} />;
-    if (businessStep === 'marketing_form') return <MarketingCopyForm onSubmit={onMarketingSubmit} />;
-
-    if (creativeStep === 'rewriting_form') return <TextRewritingForm onSubmit={onRewritingSubmit} />;
-    if (creativeStep === 'script_upload_form') return <FileUploadForm
-        title="Анализ сценария"
-        description="Загрузите ваш сценарий (DOCX, TXT) или просто текст с идеями. Задайте вопрос или оставьте поле пустым для общей рецензии."
-        promptLabel="Ваш вопрос к материалам (необязательно)"
-        promptPlaceholder="Например: 'Какие слабые места у этого диалога?', 'Предложи развитие для этого персонажа'"
-        buttonText="Проанализировать"
-        cost={2} maxFiles={5} maxFileSizeMB={10} acceptedFileTypes=".txt,.docx"
-        accentColor="accent-creative"
-        icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>}
-        remainingGenerations={remainingGenerations}
-        onSubmit={(files, prompt) => onCreativeFileTaskSubmit(files, '', prompt)}
-    />;
-    if (creativeStep === 'audio_script_topic') return <AudioScriptTopicForm onSubmit={onAudioScriptTopicSubmit} />;
-    if (creativeStep === 'audio_script_config') return <AudioScriptConfigForm onSubmit={onAudioScriptSubmit} request={audioScriptRequest} />;
-
-    if (scienceStep === 'article_form') return <ArticlePlanForm onSubmit={onArticlePlanSubmit} docType={docType} />;
-    if (scienceStep === 'plan_review' && articlePlan) return <ArticlePlanReview initialPlan={articlePlan} onGenerate={onGenerateArticle} docType={docType} />;
-
-    if (scienceFileStep === 'upload_form') return <FileUploadForm
-        title={docType}
-        description="Загрузите до 5 файлов (DOCX, TXT, PDF) для анализа и выполнения научной задачи. Опишите, что нужно сделать."
-        promptLabel="Описание задачи (обязательно)"
-        promptPlaceholder="Например: 'Улучши эту технологию, предложив 3 новых направления развития' или 'Проведи исследование на основе этих статей и сделай выводы'"
-        buttonText="Выполнить задачу"
-        cost={2} maxFiles={5} maxFileSizeMB={10} acceptedFileTypes=".txt,.docx,.pdf"
-        accentColor="accent-science"
-        icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
-        remainingGenerations={remainingGenerations}
-        onSubmit={onScienceFileTaskSubmit}
-    />;
-    
-    if (thesisStep === 'form') return <ThesisForm onSubmit={onThesisSubmit} remainingGenerations={remainingGenerations} />;
-    
-    if (analysisStep === 'upload_form') return <FileUploadForm 
-        title={docType}
-        description={docType === DocumentType.ANALYSIS_SHORT 
-            ? "Загрузите файл для краткого анализа. AI изложит суть в пределах одной страницы." 
-            : "Загрузите файл для проверки на достоверность и происхождение (AI/человек)."}
-        promptLabel="Дополнительные указания (необязательно)"
-        promptPlaceholder="Например: 'Обрати особое внимание на раздел о финансах' или 'Проверь конкретно это утверждение...'"
-        buttonText="Провести анализ"
-        cost={docType === DocumentType.ANALYSIS_VERIFY ? 3 : 2}
-        maxFiles={1} maxFileSizeMB={10} acceptedFileTypes=".txt,.docx,.png,.jpeg,.jpg"
-        accentColor="accent-analysis"
-        icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15.5 15.5 3.5 3.5"/><path d="M18 11a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/><path d="M12 7v4l2 2"/></svg>}
-        remainingGenerations={remainingGenerations}
-        onSubmit={onAnalysisSubmit}
-    />;
-    
-    if (forecastingStep === 'form') return <ForecastingForm onSubmit={onForecastSubmit} />;
-
-    if (codeStep === 'form') return <CodeGenerationForm onSubmit={onCodeSubmit} />;
-    if (codeStep === 'review' && codeAnalysis && codeRequest) return <CodeAnalysisReview analysis={codeAnalysis} request={codeRequest} onGenerate={onGenerateCode} onCancel={onCancelCodeAnalysis} remainingGenerations={remainingGenerations} />;
-
-    // Default placeholder
-    return (
-        <div className="flex flex-col items-center justify-center h-full text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bot text-gray-300 mb-4">
-                 <path d="M12 8V4H8"/>
-                <rect width="16" height="12" x="4" y="8" rx="2"/>
-                <path d="M2 14h2"/><path d="M20 14h2"/>
-                <path d="M15 13v2"/><path d="M9 13v2"/>
-            </svg>
-            <h3 className="text-xl font-semibold text-[var(--text-dark-primary)]">Окно результатов и управления</h3>
-            <p className="mt-2 text-sm text-[var(--text-dark-secondary)] max-w-sm">
-                Здесь появятся результаты вашей генерации или специальные формы для многоэтапных задач после того, как вы выберете опцию слева.
-            </p>
+            <div className="flex-shrink-0 pt-4 text-center">
+                {!canAfford && (
+                    <p className="text-sm text-red-600 mb-3">
+                        Недостаточно генераций. У вас {remainingGenerations}.
+                    </p>
+                )}
+                <div className="flex gap-4 justify-center">
+                    <button onClick={onCancel} className="w-full max-w-xs bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-lg transition-all hover:bg-gray-300">
+                        Отмена
+                    </button>
+                    <button onClick={onGenerate} disabled={!canAfford} className="w-full max-w-xs bg-[var(--accent)] text-white font-semibold py-3 px-4 rounded-lg transition-all hover:bg-[var(--accent-light)] disabled:bg-gray-400">
+                        Сгенерировать код
+                    </button>
+                </div>
+            </div>
         </div>
     );
+};
+
+
+export const ResultDisplay: React.FC<ResultDisplayProps> = ({
+  result,
+  isLoading,
+  error,
+  isLoggedIn,
+  remainingGenerations,
+  hasMirra,
+  onShareWithMirra,
+  hasDary,
+  onShareWithDary,
+  onSaveGeneration,
+  onBuyGenerations,
+  useGeneration,
+  docType,
+  onConvertToTable,
+  // Flows
+  astrologyStep, onAstrologySelect, onNatalSubmit, onHoroscopeSubmit,
+  bookWritingStep, bookPlan, onPlanSubmit, onGenerateBook,
+  personalAnalysisStep, onPersonalAnalysisSubmit,
+  docAnalysisStep, onDocAnalysisSubmit,
+  consultationStep, onSpecialistSelect, selectedSpecialist, chatMessages, onSendMessage,
+  tutorStep, onSubjectSelect, selectedSubject, tutorChatMessages, onTutorSendMessage,
+  fileTaskStep, onFileTaskSubmit,
+  businessStep, businessPlan, onSwotSubmit, onCommercialProposalSubmit, onBusinessPlanSubmit, onGenerateBusinessPlan, onMarketingSubmit,
+  creativeStep, onRewritingSubmit, onCreativeFileTaskSubmit, onAudioScriptTopicSubmit, onAudioScriptSubmit, audioScriptRequest,
+  scienceStep, articlePlan, onArticlePlanSubmit, onGenerateArticle,
+  scienceFileStep, onScienceFileTaskSubmit,
+  thesisStep, onThesisSubmit,
+  analysisStep, onAnalysisSubmit,
+  forecastingStep, onForecastSubmit,
+  codeStep, onCodeSubmit, onGenerateCode, codeAnalysis, codeRequest, onCancelCodeAnalysis
+}) => {
+
+  const isQuotaError = error && (error.includes('quota') || error.includes('429'));
+  const isApiKeyError = error && (error.includes('API_KEY_INVALID') || error.includes('API key not valid'));
+
+  if (isQuotaError) return <QuotaErrorDisplay onBuyGenerations={onBuyGenerations} />;
+  if (isApiKeyError) return <ApiKeyErrorDisplay />;
+  if (error) {
+    return (
+        <div className="flex flex-col items-center justify-center h-full text-center text-red-800 bg-red-50 p-6 rounded-lg border-2 border-red-200">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shield-x mb-4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m14.5 9.5-5 5"/><path d="m9.5 9.5 5 5"/></svg>
+            <h3 className="text-xl font-semibold">Произошла ошибка</h3>
+            <p className="mt-2 text-sm text-red-700 max-w-md">{error}</p>
+        </div>
+    );
+  }
+
+  // Astrology Flow
+  if (astrologyStep === 'selection') return <AstrologySelection onSelect={onAstrologySelect} />;
+  if (astrologyStep === 'natal_form') return <NatalChartForm onSubmit={onNatalSubmit} />;
+  if (astrologyStep === 'horoscope_form') return <HoroscopeForm onSubmit={onHoroscopeSubmit} />;
+
+  // Book Writing Flow
+  if (bookWritingStep === 'form') return <BookPlanForm onSubmit={onPlanSubmit} />;
+  if (bookWritingStep === 'plan_review' && bookPlan) return <BookPlanReview initialPlan={bookPlan} onGenerate={onGenerateBook} />;
+  
+  // Personal Analysis Flow
+  if (personalAnalysisStep === 'form') return <PersonalAnalysisForm onSubmit={onPersonalAnalysisSubmit} />;
+  
+  // Doc Analysis Flow
+  if (docAnalysisStep === 'upload_form') {
+    return <FileUploadForm
+                title="Доктор"
+                description="Загрузите медицинские анализы, заключения или другие документы для анализа."
+                promptLabel="Опишите, что вы хотите узнать из документов"
+                promptPlaceholder="Например: 'Расшифруй, пожалуйста, эти анализы крови' или 'Что означает этот диагноз?'"
+                buttonText="Проанализировать документы"
+                cost={2} maxFiles={5} maxFileSizeMB={10} acceptedFileTypes="image/*,application/pdf"
+                accentColor="accent-life"
+                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>}
+                remainingGenerations={remainingGenerations}
+                onSubmit={onDocAnalysisSubmit}
+            />;
+  }
+  
+  // Consultation Flow
+  if (consultationStep === 'selection') return <SpecialistSelection onSelect={onSpecialistSelect} />;
+  if (consultationStep === 'chatting' && selectedSpecialist) {
+    return <ChatWindow specialist={selectedSpecialist} messages={chatMessages} onSendMessage={onSendMessage} isLoading={isLoading} />;
+  }
+
+  // Tutor Flow
+  if (tutorStep === 'subject_selection') return <SubjectSelection onSelect={onSubjectSelect} />;
+  if (tutorStep === 'chatting' && selectedSubject) {
+    const tutorSpecialist = { id: 'tutor', name: `Репетитор: ${selectedSubject}`, description: '', category: 'Другие сферы', systemInstruction: '' };
+    return <ChatWindow specialist={tutorSpecialist} messages={tutorChatMessages} onSendMessage={onTutorSendMessage} isLoading={isLoading} />;
+  }
+  
+  // File Task Flow
+  if (fileTaskStep === 'upload_form') {
+    return <FileUploadForm
+                title={docType === DocumentType.DO_HOMEWORK ? "Сделать ДЗ" : "Решить КР, ПР"}
+                description="Загрузите фото или файлы с вашим заданием, чтобы получить решение и объяснение."
+                promptLabel="Пояснения к заданию (необязательно)"
+                promptPlaceholder="Например: 'Нужно решить только нечетные номера' или 'Объясни, пожалуйста, второй шаг подробнее'"
+                buttonText="Отправить на решение"
+                cost={docType === DocumentType.DO_HOMEWORK ? 2 : 1}
+                maxFiles={10} maxFileSizeMB={10} acceptedFileTypes="image/*,application/pdf,.doc,.docx,.txt"
+                accentColor="accent"
+                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>}
+                remainingGenerations={remainingGenerations}
+                onSubmit={onFileTaskSubmit}
+            />;
+  }
+
+  // Business Flow
+  if (businessStep === 'swot_form') return <SwotAnalysisForm onSubmit={onSwotSubmit} />;
+  if (businessStep === 'proposal_form') return <CommercialProposalForm onSubmit={onCommercialProposalSubmit} />;
+  if (businessStep === 'business_plan_form') return <BusinessPlanForm onSubmit={onBusinessPlanSubmit} />;
+  if (businessStep === 'plan_review' && businessPlan) return <BusinessPlanReview initialPlan={businessPlan} onGenerate={onGenerateBusinessPlan} />;
+  if (businessStep === 'marketing_form') return <MarketingCopyForm onSubmit={onMarketingSubmit} />;
+  
+  // Creative Flow
+  if (creativeStep === 'rewriting_form') return <TextRewritingForm onSubmit={onRewritingSubmit} />;
+  if (creativeStep === 'script_upload_form') {
+    return <FileUploadForm
+                title="Анализ сценария"
+                description="Загрузите ваш сценарий, синопсис, логлайн или просто идеи для анализа и улучшения."
+                promptLabel="Что вы хотите улучшить или проанализировать?"
+                promptPlaceholder="Например: 'Усилить конфликт во втором акте', 'Проверить диалоги на естественность', 'Предложить варианты развития сюжета'"
+                buttonText="Отправить на анализ"
+                cost={2} maxFiles={3} maxFileSizeMB={10} acceptedFileTypes=".txt,.doc,.docx"
+                accentColor="accent-creative"
+                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="12" y2="18"/></svg>}
+                remainingGenerations={remainingGenerations}
+                onSubmit={(files, prompt) => onCreativeFileTaskSubmit(files, '', prompt)}
+            />;
+  }
+  if (creativeStep === 'audio_script_topic') return <AudioScriptTopicForm onSubmit={onAudioScriptTopicSubmit} />;
+  if (creativeStep === 'audio_script_config') return <AudioScriptConfigForm onSubmit={onAudioScriptSubmit} request={audioScriptRequest} />;
+
+  // Science Flow
+  if (scienceStep === 'article_form') return <ArticlePlanForm onSubmit={onArticlePlanSubmit} docType={docType} />;
+  if (scienceStep === 'plan_review' && articlePlan) return <ArticlePlanReview initialPlan={articlePlan} onGenerate={onGenerateArticle} docType={docType} />;
+  if (scienceFileStep === 'upload_form') {
+      return <FileUploadForm
+                  title={docType}
+                  description="Загрузите файлы для проведения изыскания или улучшения технологии."
+                  promptLabel="Пояснения к задаче"
+                  promptPlaceholder="Например: 'Проанализируй эти данные и предложи гипотезы' или 'На основе этих патентов предложи улучшения для технологии...'"
+                  buttonText="Начать анализ"
+                  cost={2} maxFiles={10} maxFileSizeMB={10} acceptedFileTypes="image/*,application/pdf,.doc,.docx,.txt"
+                  accentColor="accent-science"
+                  icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>}
+                  remainingGenerations={remainingGenerations}
+                  onSubmit={onScienceFileTaskSubmit}
+              />;
+  }
+
+  // Thesis Flow
+  if (thesisStep === 'form') return <ThesisForm onSubmit={onThesisSubmit} remainingGenerations={remainingGenerations} />;
+
+  // Analysis Flow
+  if (analysisStep === 'upload_form') {
+      return <FileUploadForm
+                title={docType}
+                description="Загрузите текст или документ для анализа."
+                promptLabel="Что именно нужно сделать?"
+                promptPlaceholder={docType === DocumentType.ANALYSIS_VERIFY ? "Например: 'Проверь факты в этом тексте' или 'Найди возможные противоречия'" : "Например: 'Выдели основные тезисы' или 'Сделай краткое саммари'"}
+                buttonText="Начать анализ"
+                cost={docType === DocumentType.ANALYSIS_VERIFY ? 3 : 2}
+                maxFiles={3} maxFileSizeMB={5} acceptedFileTypes=".txt,.doc,.docx"
+                accentColor="accent-analysis"
+                icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400"><path d="M20 12V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m18 16-2-2-2 2"/><path d="m16 14-2 2-2-2"/></svg>}
+                remainingGenerations={remainingGenerations}
+                onSubmit={onAnalysisSubmit}
+            />;
+  }
+  
+  // Forecasting Flow
+  if (forecastingStep === 'form') {
+      return <ForecastingForm onSubmit={onForecastSubmit} />;
+  }
+
+  // Code Flow
+  if (codeStep === 'form') return <CodeGenerationForm onSubmit={onCodeSubmit} />;
+  if (codeStep === 'review' && codeAnalysis && codeRequest) {
+    return <CodeAnalysisReview 
+        analysis={codeAnalysis} 
+        request={codeRequest}
+        onGenerate={onGenerateCode}
+        onCancel={onCancelCodeAnalysis}
+        remainingGenerations={remainingGenerations}
+    />;
+  }
+  
+  // Default Idle View
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+        <h3 className="text-xl font-semibold">Готов к работе</h3>
+        <p className="mt-2 text-sm text-[var(--text-dark-secondary)] max-w-sm">
+            Выберите необходимый вам сервис в левой панели, заполните поля, и я сгенерирую для вас результат.
+        </p>
+    </div>
+  );
 };
