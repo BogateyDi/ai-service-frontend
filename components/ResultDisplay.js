@@ -1,27 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
-import { 
-    GenerationResult, BookPlanRequest, BookPlan, AstrologyStep, BookWritingStep, 
-    FileTaskStep, DocumentType, BusinessStep, SwotAnalysisRequest, 
-    CommercialProposalRequest, BusinessPlanRequest, BusinessPlan, CreativeStep,
-    TextRewritingRequest, ScienceStep, ArticlePlan, AcademicArticleRequest, CodeStep, CodeGenerationRequest, MarketingCopyRequest, ArticleSection,
-    CodeAnalysisResult,
-    ThesisStep,
-    ThesisSectionInput,
-    ScienceFileStep,
-    PersonalAnalysisStep,
-    PersonalAnalysisRequest,
-    DocAnalysisStep,
-    ConsultationStep,
-    TutorStep,
-    Specialist,
-    ChatMessage,
-    BookChapter,
-    AudioScriptRequest,
-    AnalysisStep,
-    ForecastingStep
-} from '../types.js';
-import { BOOK_GENRES, BOOK_STYLES, MARKETING_TEXT_TYPES, TONE_OF_VOICE_OPTIONS, REWRITING_GOALS, REWRITING_STYLES, PROGRAMMING_LANGUAGES, SPECIALISTS, TUTOR_SUBJECTS, AUDIO_SCRIPT_TYPES, AUDIO_VOICE_PROFILES, CHILDREN_AGES } from '../constants.js';
+import { DocumentType } from '../types.js';
+import { BOOK_GENRES, BOOK_STYLES, MARKETING_TEXT_TYPES, TONE_OF_VOICE_OPTIONS, REWRITING_GOALS, REWRITING_STYLES, PROGRAMMING_LANGUAGES, SPECIALISTS, TUTOR_SUBJECTS, AUDIO_SCRIPT_TYPES, AUDIO_VOICE_PROFILES } from '../constants.js';
 
 import FileUploadForm from './FileUploadForm.js';
 import { ThesisForm } from './ThesisForm.js';
@@ -29,20 +9,8 @@ import { MermaidDiagram } from './MermaidDiagram.js';
 
 
 // #region ResultViewer Component
-interface ResultViewerProps {
-  result: GenerationResult;
-  isLoggedIn: boolean;
-  hasMirra: boolean;
-  hasDary: boolean;
-  useGeneration: (cost?: number) => boolean;
-  onSaveGeneration: (record: { docType: DocumentType; title: string; text: string; }) => void;
-  onShareWithMirra: (result: GenerationResult) => void;
-  onShareWithDary: (result: GenerationResult) => void;
-  onConvertToTable: (brokenCode: string) => void;
-}
-
-export const ResultViewer: React.FC<ResultViewerProps> = ({ result, isLoggedIn, hasMirra, hasDary, onShareWithMirra, onShareWithDary, onConvertToTable }) => {
-  const resultTextRef = useRef<HTMLDivElement>(null);
+export const ResultViewer = ({ result, isLoggedIn, hasMirra, hasDary, onShareWithMirra, onShareWithDary, onConvertToTable }) => {
+  const resultTextRef = useRef(null);
 
   const handleCopy = () => {
     if (resultTextRef.current) {
@@ -54,7 +22,7 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ result, isLoggedIn, 
   const resultTextParts = useMemo(() => {
     if (!result.text) return [];
     const regex = /```mermaid\n([\s\S]*?)\n```/g;
-    const parts: {type: 'text' | 'mermaid', content: string}[] = [];
+    const parts = [];
     let lastIndex = 0;
     let match;
 
@@ -109,7 +77,7 @@ export const ResultViewer: React.FC<ResultViewerProps> = ({ result, isLoggedIn, 
 
 
 // #region Placeholder Component
-const Placeholder: React.FC<{ docType: DocumentType }> = ({ docType }) => {
+const Placeholder = ({ docType }) => {
   let title = "Готовы к созданию?";
   let text = "Выберите тип документа слева и заполните необходимые поля, чтобы начать генерацию.";
 
@@ -143,7 +111,7 @@ const Placeholder: React.FC<{ docType: DocumentType }> = ({ docType }) => {
 
 
 // #region Form Components
-const FormWrapper: React.FC<{ title: string; description: string; children: React.ReactNode, accentColor?: string }> = ({ title, description, children, accentColor = 'accent' }) => (
+const FormWrapper = ({ title, description, children, accentColor = 'accent' }) => (
     <div className="flex flex-col h-full p-2">
         <h3 className={`text-xl font-semibold mb-2 text-center text-[var(--${accentColor})]`}>{title}</h3>
         <p className="text-sm text-center text-[var(--text-dark-secondary)] mb-4">{description}</p>
@@ -153,7 +121,7 @@ const FormWrapper: React.FC<{ title: string; description: string; children: Reac
     </div>
 );
 
-const FormSubmitButton: React.FC<{ text: string; cost?: number; isDisabled?: boolean; accentColor?: string; onClick?: React.MouseEventHandler<HTMLButtonElement>; }> = ({ text, cost, isDisabled = false, accentColor = 'accent', onClick }) => (
+const FormSubmitButton = ({ text, cost, isDisabled = false, accentColor = 'accent', onClick }) => (
     <div className="flex-shrink-0 pt-4 text-center">
         {cost !== undefined && <p className="text-sm text-[var(--text-dark-secondary)] mb-3">Стоимость: <span className="font-bold">{cost}</span> генерации</p>}
         <button type={onClick ? "button" : "submit"} onClick={onClick} disabled={isDisabled} className={`w-full max-w-sm text-white font-semibold py-3 px-4 rounded-lg transition-all bg-[var(--${accentColor})] hover:bg-[var(--${accentColor}-dark)] disabled:bg-gray-400`}>
@@ -162,19 +130,19 @@ const FormSubmitButton: React.FC<{ text: string; cost?: number; isDisabled?: boo
      </div>
 );
 
-const Label: React.FC<{ htmlFor?: string, children: React.ReactNode }> = ({ htmlFor, children }) => <label htmlFor={htmlFor} className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">{children}</label>;
-const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => <input {...props} className={`w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent)] ${props.className}`} />;
-const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => <textarea {...props} className={`w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent)] resize-none ${props.className}`} />;
-const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = (props) => <select {...props} className={`w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent)] ${props.className}`} />;
+const Label = ({ htmlFor, children }) => <label htmlFor={htmlFor} className="block text-sm font-medium text-[var(--text-dark-secondary)] mb-1">{children}</label>;
+const Input = (props) => <input {...props} className={`w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent)] ${props.className}`} />;
+const Textarea = (props) => <textarea {...props} className={`w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent)] resize-none ${props.className}`} />;
+const Select = (props) => <select {...props} className={`w-full bg-gray-50 border-2 border-gray-200 rounded-lg p-3 focus:outline-none focus:border-[var(--accent)] ${props.className}`} />;
 
 
 // --- Specialist / Tutor Forms ---
-const SpecialistSelector: React.FC<{ onSelect: (specialist: Specialist) => void }> = ({ onSelect }) => {
+const SpecialistSelector = ({ onSelect }) => {
     const specialistsByCat = useMemo(() => {
         return SPECIALISTS.reduce((acc, specialist) => {
             (acc[specialist.category] = acc[specialist.category] || []).push(specialist);
             return acc;
-        }, {} as Record<string, Specialist[]>);
+        }, {});
     }, []);
 
     return (
@@ -198,7 +166,7 @@ const SpecialistSelector: React.FC<{ onSelect: (specialist: Specialist) => void 
     );
 };
 
-const TutorSelector: React.FC<{ onSelect: (subject: string) => void }> = ({ onSelect }) => (
+const TutorSelector = ({ onSelect }) => (
     <FormWrapper title="Репетитор" description="Выберите предмет для занятия.">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {TUTOR_SUBJECTS.map(subject => (
@@ -210,20 +178,15 @@ const TutorSelector: React.FC<{ onSelect: (subject: string) => void }> = ({ onSe
     </FormWrapper>
 );
 
-const ChatInterface: React.FC<{
-    title: string;
-    messages: ChatMessage[];
-    onSendMessage: (message: string) => void;
-    isLoading: boolean;
-}> = ({ title, messages, onSendMessage, isLoading }) => {
+const ChatInterface = ({ title, messages, onSendMessage, isLoading }) => {
     const [input, setInput] = useState('');
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesEndRef = useRef(null);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
     
-    const handleSend = (e: React.FormEvent) => {
+    const handleSend = (e) => {
         e.preventDefault();
         if (input.trim() && !isLoading) {
             onSendMessage(input.trim());
@@ -255,10 +218,9 @@ const ChatInterface: React.FC<{
 };
 
 // --- Other Simple Forms ---
-const SimplePromptForm: React.FC<{ title: string; description: string; placeholder: string; buttonText: string; cost: number; onSubmit: (prompt: string) => void; accentColor: string; }> = 
-({ title, description, placeholder, buttonText, cost, onSubmit, accentColor }) => {
+const SimplePromptForm = ({ title, description, placeholder, buttonText, cost, onSubmit, accentColor }) => {
     const [prompt, setPrompt] = useState('');
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         if (!prompt.trim()) { toast.error("Пожалуйста, заполните поле."); return; }
         onSubmit(prompt);
@@ -274,10 +236,10 @@ const SimplePromptForm: React.FC<{ title: string; description: string; placehold
 };
 
 
-const PersonalAnalysisForm: React.FC<{ onSubmit: (data: PersonalAnalysisRequest) => void }> = ({ onSubmit }) => {
-    const [gender, setGender] = useState<'male' | 'female'>('male');
+const PersonalAnalysisForm = ({ onSubmit }) => {
+    const [gender, setGender] = useState('male');
     const [prompt, setPrompt] = useState('');
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         if (!prompt.trim()) { toast.error("Пожалуйста, опишите ваш запрос."); return; }
         onSubmit({ gender, userPrompt: prompt });
@@ -300,12 +262,12 @@ const PersonalAnalysisForm: React.FC<{ onSubmit: (data: PersonalAnalysisRequest)
 };
 
 // --- Complex Plan-Based Forms ---
-const PlanReviewer: React.FC<{ plan: BookPlan | BusinessPlan | ArticlePlan; onGenerate: (editedPlan: any) => void; planType: string; accentColor: string; }> = ({ plan, onGenerate, planType, accentColor }) => {
+const PlanReviewer = ({ plan, onGenerate, planType, accentColor }) => {
     const [editablePlan, setEditablePlan] = useState(plan);
     const sections = 'chapters' in editablePlan ? editablePlan.chapters : editablePlan.sections;
     const cost = sections.length;
 
-    const handleSectionChange = (index: number, field: 'title' | 'description', value: string) => {
+    const handleSectionChange = (index, field, value) => {
         const newSections = [...sections];
         newSections[index] = { ...newSections[index], [field]: value };
         const key = 'chapters' in editablePlan ? 'chapters' : 'sections';
@@ -328,16 +290,16 @@ const PlanReviewer: React.FC<{ plan: BookPlan | BusinessPlan | ArticlePlan; onGe
     );
 };
 
-const ArticlePlanForm: React.FC<{ onSubmit: (req: AcademicArticleRequest, file: File | null) => void; docType: DocumentType }> = ({ onSubmit, docType }) => {
+const ArticlePlanForm = ({ onSubmit, docType }) => {
     const [topic, setTopic] = useState('');
     const [hypothesis, setHypothesis] = useState('');
     const [field, setField] = useState('');
     const [sectionsCount, setSectionsCount] = useState(5);
-    const [file, setFile] = useState<File | null>(null);
+    const [file, setFile] = useState(null);
 
     const isGrant = docType === DocumentType.GRANT_PROPOSAL;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit({ topic, hypothesis, field, sectionsCount }, file);
     };
@@ -363,14 +325,14 @@ const ArticlePlanForm: React.FC<{ onSubmit: (req: AcademicArticleRequest, file: 
     );
 };
 
-const BookPlanForm: React.FC<{ onSubmit: (req: BookPlanRequest) => void }> = ({ onSubmit }) => {
+const BookPlanForm = ({ onSubmit }) => {
     const [userPrompt, setUserPrompt] = useState('');
     const [genre, setGenre] = useState(BOOK_GENRES[0]);
     const [style, setStyle] = useState(BOOK_STYLES[0]);
     const [chaptersCount, setChaptersCount] = useState(10);
     const [readerAge, setReaderAge] = useState(16);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit({ userPrompt, genre, style, chaptersCount, readerAge });
     };
@@ -391,11 +353,11 @@ const BookPlanForm: React.FC<{ onSubmit: (req: BookPlanRequest) => void }> = ({ 
     );
 };
 
-const BusinessPlanForm: React.FC<{ onSubmit: (req: BusinessPlanRequest) => void }> = ({ onSubmit }) => {
+const BusinessPlanForm = ({ onSubmit }) => {
     const [idea, setIdea] = useState('');
     const [industry, setIndustry] = useState('');
     const [sectionsCount, setSectionsCount] = useState(7);
-    const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit({ idea, industry, sectionsCount }); };
+    const handleSubmit = (e) => { e.preventDefault(); onSubmit({ idea, industry, sectionsCount }); };
 
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
@@ -411,10 +373,10 @@ const BusinessPlanForm: React.FC<{ onSubmit: (req: BusinessPlanRequest) => void 
     );
 };
 
-const MarketingForm: React.FC<{ onSubmit: (req: MarketingCopyRequest) => void }> = ({ onSubmit }) => {
-    const [request, setRequest] = useState<MarketingCopyRequest>({ copyType: MARKETING_TEXT_TYPES[0], product: '', audience: '', tone: TONE_OF_VOICE_OPTIONS[0], details: '' });
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setRequest({...request, [e.target.name]: e.target.value });
-    const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit(request); };
+const MarketingForm = ({ onSubmit }) => {
+    const [request, setRequest] = useState({ copyType: MARKETING_TEXT_TYPES[0], product: '', audience: '', tone: TONE_OF_VOICE_OPTIONS[0], details: '' });
+    const handleChange = (e) => setRequest({...request, [e.target.name]: e.target.value });
+    const handleSubmit = (e) => { e.preventDefault(); onSubmit(request); };
 
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
@@ -432,12 +394,12 @@ const MarketingForm: React.FC<{ onSubmit: (req: MarketingCopyRequest) => void }>
     );
 };
 
-const TextRewritingForm: React.FC<{ onSubmit: (req: TextRewritingRequest, file: File | null) => void }> = ({ onSubmit }) => {
-    const [request, setRequest] = useState<Omit<TextRewritingRequest, 'originalText'>>({ goal: REWRITING_GOALS[0] });
+const TextRewritingForm = ({ onSubmit }) => {
+    const [request, setRequest] = useState({ goal: REWRITING_GOALS[0] });
     const [text, setText] = useState('');
-    const [file, setFile] = useState<File | null>(null);
+    const [file, setFile] = useState(null);
 
-    const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit({ ...request, originalText: text }, file); };
+    const handleSubmit = (e) => { e.preventDefault(); onSubmit({ ...request, originalText: text }, file); };
 
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
@@ -455,10 +417,10 @@ const TextRewritingForm: React.FC<{ onSubmit: (req: TextRewritingRequest, file: 
     );
 };
 
-const AudioScriptTopicForm: React.FC<{ onSubmit: (topic: string, duration: number) => void }> = ({ onSubmit }) => {
+const AudioScriptTopicForm = ({ onSubmit }) => {
     const [topic, setTopic] = useState('');
     const [duration, setDuration] = useState(5);
-    const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit(topic, duration) };
+    const handleSubmit = (e) => { e.preventDefault(); onSubmit(topic, duration) };
 
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
@@ -473,17 +435,16 @@ const AudioScriptTopicForm: React.FC<{ onSubmit: (topic: string, duration: numbe
     );
 };
 
-const AudioScriptConfigForm: React.FC<{ onSubmit: (config: Omit<AudioScriptRequest, 'topic'|'duration'>) => void, topic: string, duration: number, remainingGenerations: number }> = 
-({ onSubmit, topic, duration, remainingGenerations }) => {
-    const [config, setConfig] = useState({ format: 'dialogue' as 'dialogue' | 'monologue', type: AUDIO_SCRIPT_TYPES[0], voice1: AUDIO_VOICE_PROFILES[0].id, voice2: AUDIO_VOICE_PROFILES[1].id });
+const AudioScriptConfigForm = ({ onSubmit, topic, duration, remainingGenerations }) => {
+    const [config, setConfig] = useState({ format: 'dialogue', type: AUDIO_SCRIPT_TYPES[0], voice1: AUDIO_VOICE_PROFILES[0].id, voice2: AUDIO_VOICE_PROFILES[1].id });
     const cost = Math.max(2, Math.ceil(duration / 5) * 2);
-    const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit(config) };
+    const handleSubmit = (e) => { e.preventDefault(); onSubmit(config) };
 
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
             <FormWrapper title="Аудио скрипт (Шаг 2/2)" description={`Тема: "${topic}" (${duration} мин.)`} accentColor="accent-creative">
                 <div className="flex-grow space-y-3 overflow-y-auto pr-2">
-                    <div><Label>Формат</Label><Select value={config.format} onChange={e => setConfig({...config, format: e.target.value as 'dialogue' | 'monologue', voice2: e.target.value === 'monologue' ? undefined : config.voice2})}>{['dialogue', 'monologue'].map(f => <option key={f} value={f}>{f}</option>)}</Select></div>
+                    <div><Label>Формат</Label><Select value={config.format} onChange={e => setConfig({...config, format: e.target.value, voice2: e.target.value === 'monologue' ? undefined : config.voice2})}>{['dialogue', 'monologue'].map(f => <option key={f} value={f}>{f}</option>)}</Select></div>
                     <div><Label>Тип</Label><Select value={config.type} onChange={e => setConfig({...config, type: e.target.value})}>{AUDIO_SCRIPT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</Select></div>
                     <div><Label>Голос 1</Label><Select value={config.voice1} onChange={e => setConfig({...config, voice1: e.target.value})}>{AUDIO_VOICE_PROFILES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</Select></div>
                     {config.format === 'dialogue' && <div><Label>Голос 2</Label><Select value={config.voice2} onChange={e => setConfig({...config, voice2: e.target.value})}>{AUDIO_VOICE_PROFILES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</Select></div>}
@@ -494,10 +455,10 @@ const AudioScriptConfigForm: React.FC<{ onSubmit: (config: Omit<AudioScriptReque
     )
 };
 
-const CodeGenerationForm: React.FC<{ onSubmit: (req: CodeGenerationRequest) => void }> = ({ onSubmit }) => {
+const CodeGenerationForm = ({ onSubmit }) => {
     const [language, setLanguage] = useState(PROGRAMMING_LANGUAGES[0]);
     const [taskDescription, setTaskDescription] = useState('');
-    const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit({ language, taskDescription }) };
+    const handleSubmit = (e) => { e.preventDefault(); onSubmit({ language, taskDescription }) };
     return (
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
             <FormWrapper title="Генерация кода" description="Опишите задачу, и мы напишем код для вас." accentColor="accent-code">
@@ -511,8 +472,7 @@ const CodeGenerationForm: React.FC<{ onSubmit: (req: CodeGenerationRequest) => v
     );
 };
 
-const CodeAnalysisReview: React.FC<{ analysis: CodeAnalysisResult, onConfirm: () => void, onCancel: () => void, remainingGenerations: number }> = 
-({ analysis, onConfirm, onCancel, remainingGenerations }) => {
+const CodeAnalysisReview = ({ analysis, onConfirm, onCancel, remainingGenerations }) => {
     return (
         <FormWrapper title="Анализ задачи" description="Мы проанализировали вашу задачу. Вот результат:" accentColor="accent-code">
             <div className="flex-grow space-y-3 overflow-y-auto pr-2 bg-gray-50 p-3 rounded-lg border">
@@ -530,138 +490,7 @@ const CodeAnalysisReview: React.FC<{ analysis: CodeAnalysisResult, onConfirm: ()
 
 // #endregion
 
-// #region ResultDisplay Component and Props
-interface ResultDisplayProps {
-  result?: GenerationResult | null;
-  isLoading: boolean;
-  error: string | null;
-  docType: DocumentType;
-  onConvertToTable: (brokenCode: string) => void;
-
-  astrologyStep: AstrologyStep;
-  bookWritingStep: BookWritingStep;
-  fileTaskStep: FileTaskStep;
-  businessStep: BusinessStep;
-  creativeStep: CreativeStep;
-  scienceStep: ScienceStep;
-  codeStep: CodeStep;
-  thesisStep: ThesisStep;
-  scienceFileStep: ScienceFileStep;
-  personalAnalysisStep: PersonalAnalysisStep;
-  docAnalysisStep: DocAnalysisStep;
-  consultationStep: ConsultationStep;
-  tutorStep: TutorStep;
-  analysisStep: AnalysisStep;
-  forecastingStep: ForecastingStep;
-
-  onAstrologySelect: (type: 'natal' | 'horoscope') => void;
-  onNatalSubmit: (data: { date: string, time: string, place: string }) => void;
-  onHoroscopeSubmit: (data: { date: string }) => void;
-  
-  bookPlan: (BookPlan & { genre: string; style: string; readerAge: number; }) | null;
-  onPlanSubmit: (request: BookPlanRequest) => void;
-  onGenerateBook: (plan: BookPlan) => void;
-
-  onPersonalAnalysisSubmit: (request: PersonalAnalysisRequest) => void;
-  onDocAnalysisSubmit: (files: File[], prompt: string) => void;
-  onFileTaskSubmit: (files: File[], prompt: string) => void;
-  onCreativeFileTaskSubmit: (files: File[], prompt: string) => void;
-  onScienceFileTaskSubmit: (files: File[], prompt: string) => void;
-  onAnalysisSubmit: (files: File[], prompt: string) => void;
-  
-  onForecastSubmit: (prompt: string) => void;
-
-  onSpecialistSelect: (specialist: Specialist) => void;
-  selectedSpecialist: Specialist | null;
-  chatMessages: ChatMessage[];
-  onSendMessage: (message: string) => void;
-  
-  onSubjectSelect: (subject: string) => void;
-  selectedSubject: string | null;
-  tutorChatMessages: ChatMessage[];
-  onTutorSendMessage: (message: string) => void;
-  
-  businessPlan: (BusinessPlan & { industry: string; }) | null;
-  onSwotSubmit: (request: SwotAnalysisRequest) => void;
-  onCommercialProposalSubmit: (request: CommercialProposalRequest) => void;
-  onBusinessPlanSubmit: (request: BusinessPlanRequest) => void;
-  onGenerateBusinessPlan: (plan: BusinessPlan) => void;
-  onMarketingSubmit: (request: MarketingCopyRequest) => void;
-  
-  onRewritingSubmit: (request: TextRewritingRequest, file: File | null) => void;
-  onAudioScriptTopicSubmit: (topic: string, duration: number) => void;
-  onAudioScriptSubmit: (config: Omit<AudioScriptRequest, 'topic' | 'duration'>) => void;
-  audioScriptRequest: Partial<AudioScriptRequest>;
-
-  articlePlan: (ArticlePlan & { field: string }) | null;
-  onArticlePlanSubmit: (request: AcademicArticleRequest, file: File | null) => void;
-  onGenerateArticle: (plan: ArticlePlan) => void;
-  onThesisSubmit: (topic: string, field: string, sections: ThesisSectionInput[]) => void;
-  
-  onCodeSubmit: (request: CodeGenerationRequest) => void;
-  onGenerateCode: () => void;
-  codeAnalysis: CodeAnalysisResult | null;
-  codeRequest: CodeGenerationRequest | null;
-  onCancelCodeAnalysis: () => void;
-
-  remainingGenerations: number;
-}
-
-const AstrologySelection: React.FC<{ onSelect: (type: 'natal' | 'horoscope') => void }> = ({ onSelect }) => (
-    <div className="flex flex-col h-full items-center justify-center p-4">
-        <h3 className="text-xl font-semibold mb-4 text-center">Астрология</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-            <button onClick={() => onSelect('natal')} className="p-6 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-center">
-                <span className="text-4xl">🔮</span>
-                <p className="font-semibold mt-2">Натальная карта</p>
-                <p className="text-xs text-gray-500 mt-1">Подробный анализ личности (стоимость: 2 генерации)</p>
-            </button>
-            <button onClick={() => onSelect('horoscope')} className="p-6 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-center">
-                <span className="text-4xl">✨</span>
-                <p className="font-semibold mt-2">Гороскоп</p>
-                <p className="text-xs text-gray-500 mt-1">Прогноз на указанную дату (стоимость: 1 генерация)</p>
-            </button>
-        </div>
-    </div>
-);
-
-const NatalForm: React.FC<{ onSubmit: (data: { date: string, time: string, place: string }) => void }> = ({ onSubmit }) => {
-    const [date, setDate] = useState('');
-    const [time, setTime] = useState('');
-    const [place, setPlace] = useState('');
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!date || !time || !place) {
-            toast.error('Пожалуйста, заполните все поля.');
-            return;
-        }
-        onSubmit({ date, time, place });
-    };
-    return (
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-            <h3 className="text-xl font-semibold text-center">Натальная карта</h3>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Дата рождения</label>
-                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Время рождения</label>
-                <input type="time" value={time} onChange={e => setTime(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Место рождения</label>
-                <input type="text" value={place} onChange={e => setPlace(e.target.value)} placeholder="Город, Страна" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
-            </div>
-            <button type="submit" className="w-full bg-[var(--accent-life)] text-white font-semibold py-2 px-4 rounded-lg">Рассчитать</button>
-        </form>
-    );
-};
-const HoroscopeForm: React.FC<{ onSubmit: (data: { date: string }) => void }> = ({ onSubmit }) => {
-    const [date, setDate] = useState('');
-    return (<form onSubmit={(e) => { e.preventDefault(); onSubmit({date})}} className="p-4 space-y-4"><h3 className="text-xl font-semibold text-center">Гороскоп</h3><input type="date" value={date} onChange={e => setDate(e.target.value)} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" /><button type="submit" className="w-full bg-[var(--accent-life)] text-white font-semibold py-2 px-4 rounded-lg">Получить гороскоп</button></form>);
-}
-
-export const ResultDisplay: React.FC<ResultDisplayProps> = (props) => {
+export const ResultDisplay = (props) => {
   const { docType } = props;
 
   if (props.error) {
@@ -674,7 +503,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = (props) => {
   }
 
   // --- File Upload Forms ---
-  const fileUploaders: Partial<Record<DocumentType, JSX.Element>> = {
+  const fileUploaders = {
     [DocumentType.DO_HOMEWORK]: <FileUploadForm title="Сделать ДЗ" description="Загрузите файлы с домашним заданием" promptLabel="Ваши инструкции" promptPlaceholder="Например: 'Реши задачу №5', 'Напиши сочинение по теме из файла'" buttonText="Решить" cost={2} maxFiles={5} maxFileSizeMB={10} acceptedFileTypes=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" accentColor="accent" icon={<span className="text-4xl">📚</span>} remainingGenerations={props.remainingGenerations} onSubmit={props.onFileTaskSubmit} />,
     [DocumentType.SOLVE_CONTROL_WORK]: <FileUploadForm title="Решить КР/ПР" description="Загрузите фото или документ с контрольной работой" promptLabel="Ваши инструкции (необязательно)" promptPlaceholder="Например: 'Нужно решить все задания'" buttonText="Решить" cost={1} maxFiles={5} maxFileSizeMB={10} acceptedFileTypes=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" accentColor="accent" icon={<span className="text-4xl">📝</span>} remainingGenerations={props.remainingGenerations} onSubmit={props.onFileTaskSubmit} />,
     [DocumentType.DOCUMENT_ANALYSIS]: <FileUploadForm title="Доктор" description="Загрузите один или несколько документов для анализа (например, результаты анализов, выписки)." promptLabel="Что вы хотите узнать?" promptPlaceholder="Например: 'Расшифруй анализы', 'Что означают эти показатели?'" buttonText="Проанализировать" cost={2} maxFiles={10} maxFileSizeMB={10} acceptedFileTypes=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" accentColor="accent-life" icon={<span className="text-4xl">🩺</span>} remainingGenerations={props.remainingGenerations} onSubmit={props.onDocAnalysisSubmit} />,
@@ -734,9 +563,9 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = (props) => {
   }
   
   if (docType === DocumentType.COMMERCIAL_PROPOSAL && props.businessStep === 'proposal_form') {
-      const Form: React.FC = () => {
-          const [req, setReq] = useState<CommercialProposalRequest>({ product: '', client: '', goals: '' });
-          const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); props.onCommercialProposalSubmit(req); };
+      const Form = () => {
+          const [req, setReq] = useState({ product: '', client: '', goals: '' });
+          const handleSubmit = (e) => { e.preventDefault(); props.onCommercialProposalSubmit(req); };
           return (
               <form onSubmit={handleSubmit} className="h-full flex flex-col"><FormWrapper title="Коммерческое предложение" description="Заполните данные для создания предложения." accentColor="accent-advanced">
                   <div className="flex-grow space-y-3 overflow-y-auto pr-2">

@@ -2,27 +2,15 @@ import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { AppView } from '../types.js';
 
-interface HeaderProps {
-  onNavigate: (view: AppView) => void;
-  onSelectAssistant: (assistant: 'mirra' | 'dary') => void;
-  onShowTerms: () => void;
-  onLogin: (code: string) => void;
-  onLogout: () => void;
-  currentUserCode: string | null;
-  remainingGenerations: number;
-  hasMirra: boolean;
-  hasDary: boolean;
-}
-
-const NavButton: React.FC<{ onClick: () => void, children: React.ReactNode }> = ({ onClick, children }) => (
+const NavButton = ({ onClick, children }) => (
     <button onClick={onClick} className="text-sm font-medium text-[var(--text-light-secondary)] hover:text-[var(--text-light-primary)] transition-colors whitespace-nowrap">
         {children}
     </button>
 );
 
-const NavSeparator: React.FC = () => <div className="w-px h-4 bg-gray-600" />;
+const NavSeparator = () => <div className="w-px h-4 bg-gray-600" />;
 
-export const Header: React.FC<HeaderProps> = ({ onNavigate, onSelectAssistant, onShowTerms, onLogin, onLogout, currentUserCode, remainingGenerations, hasMirra, hasDary }) => {
+export const Header = ({ onNavigate, onSelectAssistant, onShowTerms, onLogin, onLogout, currentUserCode, remainingGenerations, hasMirra, hasDary }) => {
   const [code, setCode] = useState('');
 
   const handleLoginClick = () => {

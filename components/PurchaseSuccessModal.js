@@ -1,14 +1,7 @@
-
 import React from 'react';
 import { toast } from 'react-hot-toast';
 
-interface PurchaseSuccessModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  code: string | null;
-}
-
-export const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ isOpen, onClose, code }) => {
+export const PurchaseSuccessModal = ({ isOpen, onClose, code }) => {
   if (!isOpen || !code) return null;
 
   const handleCopy = () => {

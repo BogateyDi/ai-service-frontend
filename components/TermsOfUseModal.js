@@ -1,11 +1,6 @@
 import React from 'react';
 
-interface TermsOfUseModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export const TermsOfUseModal: React.FC<TermsOfUseModalProps> = ({ isOpen, onClose }) => {
+export const TermsOfUseModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (

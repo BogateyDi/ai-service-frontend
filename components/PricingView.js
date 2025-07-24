@@ -1,16 +1,7 @@
 import React from 'react';
 import { PRICING_PACKAGES } from '../constants.js';
-import { GenerationPackage } from '../types.js';
 
-interface PricingViewProps {
-  onPurchase: (pkg: GenerationPackage) => void;
-  onAssistantPurchase: (assistant: 'mirra' | 'dary') => void;
-  isLoggedIn: boolean;
-  hasMirra: boolean;
-  hasDary: boolean;
-}
-
-export const PricingView: React.FC<PricingViewProps> = ({ onPurchase, onAssistantPurchase, isLoggedIn, hasMirra, hasDary }) => {
+export const PricingView = ({ onPurchase, onAssistantPurchase, isLoggedIn, hasMirra, hasDary }) => {
   return (
     <div className="max-w-5xl mx-auto flex flex-col items-center">
       

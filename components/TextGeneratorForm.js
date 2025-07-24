@@ -7,58 +7,11 @@ import {
     DOC_TYPES_BY_ADULT_CATEGORY,
     ANALYSIS_DOC_TYPES
 } from '../constants.js';
-import { DocumentType, AstrologyStep, BookWritingStep, FileTaskStep, BusinessStep, CreativeStep, ScienceStep, CodeStep, ThesisStep, ScienceFileStep, PersonalAnalysisStep, DocAnalysisStep, ConsultationStep, TutorStep, AnalysisStep, ForecastingStep } from '../types.js';
+import { DocumentType } from '../types.js';
 import { VerticalSelector } from './VerticalSelector.js';
 import { toast } from 'react-hot-toast';
 
-type Audience = 'children' | 'adults';
-
-interface TextGeneratorFormProps {
-  audience: Audience;
-  docType: DocumentType;
-  onDocTypeChange: (docType: DocumentType) => void;
-  age: number;
-  onAgeChange: (age: number) => void;
-  adultCategory: string;
-  onAdultCategoryChange: (category: string) => void;
-  useGeneration: (cost?: number) => boolean;
-  onStart: () => void;
-  onStartAstrology: () => void;
-  onStartBookWriting: () => void;
-  onStartPersonalAnalysis: () => void;
-  onStartDocAnalysis: () => void;
-  onStartConsultation: () => void;
-  onStartTutor: () => void;
-  onStartFileTask: () => void;
-  onStartBusiness: () => void;
-  onStartCreative: () => void;
-  onStartScience: () => void;
-  onStartScienceFileTask: () => void;
-  onStartCode: () => void;
-  onStartThesis: () => void;
-  onStartAnalysis: () => void;
-  onStartForecasting: () => void;
-  onStandardSubmit: (topic: string, age: number) => void;
-  onProgressUpdate: (message: string) => void;
-  isDisabled: boolean;
-  astrologyStep: AstrologyStep;
-  bookWritingStep: BookWritingStep;
-  personalAnalysisStep: PersonalAnalysisStep;
-  docAnalysisStep: DocAnalysisStep;
-  consultationStep: ConsultationStep;
-  tutorStep: TutorStep;
-  fileTaskStep: FileTaskStep;
-  businessStep: BusinessStep;
-  creativeStep: CreativeStep;
-  scienceStep: ScienceStep;
-  scienceFileStep: ScienceFileStep;
-  codeStep: CodeStep;
-  thesisStep: ThesisStep;
-  analysisStep: AnalysisStep;
-  forecastingStep: ForecastingStep;
-}
-
-export const TextGeneratorForm: React.FC<TextGeneratorFormProps> = ({ 
+export const TextGeneratorForm = ({ 
     audience, 
     docType,
     onDocTypeChange,
@@ -103,7 +56,7 @@ export const TextGeneratorForm: React.FC<TextGeneratorFormProps> = ({
     forecastingStep,
 }) => {
   // Shared state
-  const [topic, setTopic] = useState<string>('');
+  const [topic, setTopic] = useState('');
 
   const isAstrologyMode = docType === DocumentType.ASTROLOGY;
   const isBookWritingMode = docType === DocumentType.BOOK_WRITING;
@@ -160,7 +113,7 @@ export const TextGeneratorForm: React.FC<TextGeneratorFormProps> = ({
     }
   }, [docType, isSpecialMode]);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     if (isDisabled || isSpecialMode) {
         return;
@@ -178,7 +131,7 @@ export const TextGeneratorForm: React.FC<TextGeneratorFormProps> = ({
   
   const childrenAgeDisplayItems = CHILDREN_AGES.map(String);
 
-  const handleFirstSelectorSelect = (selectedValue: string) => {
+  const handleFirstSelectorSelect = (selectedValue) => {
     if (audience === 'children') {
         const newAge = parseInt(selectedValue, 10);
         if (!isNaN(newAge)) {
@@ -191,8 +144,8 @@ export const TextGeneratorForm: React.FC<TextGeneratorFormProps> = ({
     }
   };
   
-  const handleSecondSelectorSelect = (value: string) => {
-    onDocTypeChange(value as DocumentType);
+  const handleSecondSelectorSelect = (value) => {
+    onDocTypeChange(value);
   };
   
   let placeholderText = 'Например: Влияние Римской империи на современный мир';

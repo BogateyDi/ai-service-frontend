@@ -2,21 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { TextGeneratorForm } from './TextGeneratorForm.js';
 import { ResultDisplay, ResultViewer } from './ResultDisplay.js';
 import { 
-    GenerationResult, DocumentType, BookPlanRequest, BookPlan, AstrologyStep, BookWritingStep, 
-    FileTaskStep, BusinessStep, SwotAnalysisRequest, CommercialProposalRequest,
-    BusinessPlanRequest, BusinessPlan, CreativeStep, ScienceStep, CodeStep, TextRewritingRequest,
-    MarketingCopyRequest, AcademicArticleRequest, ArticlePlan, CodeGenerationRequest, CodeAnalysisResult,
-    ThesisStep, ThesisSectionInput, ScienceFileStep, PersonalAnalysisStep, DocAnalysisStep,
-    ConsultationStep,
-    TutorStep,
-    Specialist,
-    ChatMessage,
-    AudioScriptRequest,
-    AnalysisStep,
-    ForecastingStep,
-    PersonalAnalysisRequest
-} from '../types.js';
-import { 
     generateText,
     generateNatalChart, generateHoroscope, generateBookPlan, generateSingleChapter, 
     calculateTextMetrics, solveTaskFromFiles, generateSwotAnalysis,
@@ -28,12 +13,12 @@ import {
     generateForecasting,
     convertMermaidToTable
 } from '../services/geminiService.js';
-import { STUDENT_DOC_TYPES_STANDARD, STUDENT_DOC_TYPES_INTERACTIVE, ADULT_CATEGORIES, DOC_TYPES_BY_ADULT_CATEGORY, SCIENTIFIC_DOC_TYPES, LIFE_DOC_TYPES, CREATIVE_DOC_TYPES, BUSINESS_DOC_TYPES, CODE_DOC_TYPES, CHILDREN_AGES, ANALYSIS_DOC_TYPES } from '../constants.js';
+import { STUDENT_DOC_TYPES_STANDARD, STUDENT_DOC_TYPES_INTERACTIVE, ADULT_CATEGORIES, DOC_TYPES_BY_ADULT_CATEGORY, CHILDREN_AGES } from '../constants.js';
 import { toast } from 'react-hot-toast';
 import { GenerationProgressModal } from './GenerationProgressModal.js';
 
 
-const findCategoryForDocType = (docTypeToFind: DocumentType): string | null => {
+const findCategoryForDocType = (docTypeToFind) => {
     for (const category in DOC_TYPES_BY_ADULT_CATEGORY) {
         if (DOC_TYPES_BY_ADULT_CATEGORY[category].includes(docTypeToFind)) {
             return category;
@@ -43,32 +28,7 @@ const findCategoryForDocType = (docTypeToFind: DocumentType): string | null => {
 };
 
 
-interface GeneratorViewProps {
-  isLoggedIn: boolean;
-  remainingGenerations: number;
-  useGeneration: (cost?: number) => boolean;
-  onBuyGenerations: () => void;
-  result: GenerationResult | null;
-  setResult: (result: GenerationResult | null) => void;
-  onSaveGeneration: (record: { docType: DocumentType; title: string; text: string; }) => void;
-  onGenerationStateChange: (isGenerating: boolean) => void;
-  hasMirra: boolean;
-  onShareWithMirra: (result: GenerationResult) => void;
-  hasDary: boolean;
-  onShareWithDary: (result: GenerationResult) => void;
-  initialDocType: DocumentType | null;
-  initialAge: number | null;
-  onInitialDocTypeHandled: () => void;
-}
-
-type Audience = 'children' | 'adults';
-
-const SwitcherButton: React.FC<{
-  activeValue: string;
-  value: string;
-  onClick: (value: any) => void;
-  children: React.ReactNode;
-}> = ({ activeValue, value, onClick, children }) => {
+const SwitcherButton = ({ activeValue, value, onClick, children }) => {
   return (
     <button
       type="button"
@@ -83,11 +43,7 @@ const SwitcherButton: React.FC<{
 };
 
 
-const AudienceSwitch: React.FC<{
-  activeAudience: Audience;
-  onAudienceChange: (audience: Audience) => void;
-  isDisabled: boolean;
-}> = ({ activeAudience, onAudienceChange, isDisabled }) => {
+const AudienceSwitch = ({ activeAudience, onAudienceChange, isDisabled }) => {
   return (
     <div className={`relative flex items-center bg-gray-100 rounded-xl w-full p-1 border border-gray-200 shadow-sm transition-opacity duration-300 ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div
@@ -103,48 +59,48 @@ const AudienceSwitch: React.FC<{
 };
 
 // Helper function to add delays
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remainingGenerations, useGeneration, onBuyGenerations, result, setResult, onSaveGeneration, onGenerationStateChange, hasMirra, onShareWithMirra, hasDary, onShareWithDary, initialDocType, initialAge, onInitialDocTypeHandled }) => {
-  const [audience, setAudience] = useState<Audience>('children');
-  const [docType, setDocType] = useState<DocumentType>(STUDENT_DOC_TYPES_STANDARD[0]);
-  const [adultCategory, setAdultCategory] = useState<string>(ADULT_CATEGORIES[0]);
-  const [age, setAge] = useState<number>(CHILDREN_AGES[6]); // Default to 12. Lifted state.
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [progressMessage, setProgressMessage] = useState<string>('');
+export const GeneratorView = ({ isLoggedIn, remainingGenerations, useGeneration, onBuyGenerations, result, setResult, onSaveGeneration, onGenerationStateChange, hasMirra, onShareWithMirra, hasDary, onShareWithDary, initialDocType, initialAge, onInitialDocTypeHandled }) => {
+  const [audience, setAudience] = useState('children');
+  const [docType, setDocType] = useState(STUDENT_DOC_TYPES_STANDARD[0]);
+  const [adultCategory, setAdultCategory] = useState(ADULT_CATEGORIES[0]);
+  const [age, setAge] = useState(CHILDREN_AGES[6]); // Default to 12. Lifted state.
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [progressMessage, setProgressMessage] = useState('');
   
   // State for special flows
-  const [astrologyStep, setAstrologyStep] = useState<AstrologyStep>('none');
-  const [bookWritingStep, setBookWritingStep] = useState<BookWritingStep>('none');
-  const [personalAnalysisStep, setPersonalAnalysisStep] = useState<PersonalAnalysisStep>('none');
-  const [docAnalysisStep, setDocAnalysisStep] = useState<DocAnalysisStep>('none');
-  const [consultationStep, setConsultationStep] = useState<ConsultationStep>('none');
-  const [tutorStep, setTutorStep] = useState<TutorStep>('none');
-  const [fileTaskStep, setFileTaskStep] = useState<FileTaskStep>('none');
-  const [businessStep, setBusinessStep] = useState<BusinessStep>('none');
-  const [creativeStep, setCreativeStep] = useState<CreativeStep>('none');
-  const [scienceStep, setScienceStep] = useState<ScienceStep>('none');
-  const [scienceFileStep, setScienceFileStep] = useState<ScienceFileStep>('none');
-  const [codeStep, setCodeStep] = useState<CodeStep>('none');
-  const [thesisStep, setThesisStep] = useState<ThesisStep>('none');
-  const [analysisStep, setAnalysisStep] = useState<AnalysisStep>('none');
-  const [forecastingStep, setForecastingStep] = useState<ForecastingStep>('none');
+  const [astrologyStep, setAstrologyStep] = useState('none');
+  const [bookWritingStep, setBookWritingStep] = useState('none');
+  const [personalAnalysisStep, setPersonalAnalysisStep] = useState('none');
+  const [docAnalysisStep, setDocAnalysisStep] = useState('none');
+  const [consultationStep, setConsultationStep] = useState('none');
+  const [tutorStep, setTutorStep] = useState('none');
+  const [fileTaskStep, setFileTaskStep] = useState('none');
+  const [businessStep, setBusinessStep] = useState('none');
+  const [creativeStep, setCreativeStep] = useState('none');
+  const [scienceStep, setScienceStep] = useState('none');
+  const [scienceFileStep, setScienceFileStep] = useState('none');
+  const [codeStep, setCodeStep] = useState('none');
+  const [thesisStep, setThesisStep] = useState('none');
+  const [analysisStep, setAnalysisStep] = useState('none');
+  const [forecastingStep, setForecastingStep] = useState('none');
   
-  const [bookPlan, setBookPlan] = useState<(BookPlan & { genre: string; style: string; readerAge: number; }) | null>(null);
-  const [businessPlan, setBusinessPlan] = useState<(BusinessPlan & { industry: string; }) | null>(null);
-  const [articlePlan, setArticlePlan] = useState<(ArticlePlan & { field: string }) | null>(null);
-  const [codeAnalysis, setCodeAnalysis] = useState<CodeAnalysisResult | null>(null);
-  const [codeRequest, setCodeRequest] = useState<CodeGenerationRequest | null>(null);
-  const [audioScriptRequest, setAudioScriptRequest] = useState<Partial<AudioScriptRequest>>({});
+  const [bookPlan, setBookPlan] = useState(null);
+  const [businessPlan, setBusinessPlan] = useState(null);
+  const [articlePlan, setArticlePlan] = useState(null);
+  const [codeAnalysis, setCodeAnalysis] = useState(null);
+  const [codeRequest, setCodeRequest] = useState(null);
+  const [audioScriptRequest, setAudioScriptRequest] = useState({});
 
   // Consultation state
-  const [selectedSpecialist, setSelectedSpecialist] = useState<Specialist | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [selectedSpecialist, setSelectedSpecialist] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
   
   // Tutor state
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [tutorChatMessages, setTutorChatMessages] = useState<ChatMessage[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [tutorChatMessages, setTutorChatMessages] = useState([]);
 
   const resetAllFlows = useCallback(() => {
       setResult(null);
@@ -178,14 +134,14 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
       setTutorChatMessages([]);
   }, [setResult]);
   
-  const handleGenerationStart = useCallback((message: string) => {
+  const handleGenerationStart = useCallback((message) => {
     setIsLoading(true);
     setResult(null);
     setError('');
     setProgressMessage(message);
   }, [setResult]);
 
-  const handleAudienceChange = useCallback((newAudience: Audience) => {
+  const handleAudienceChange = useCallback((newAudience) => {
     setAudience(newAudience);
     resetAllFlows();
     if (newAudience === 'children') {
@@ -198,7 +154,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     }
   }, [resetAllFlows]);
 
-  const handleDocTypeChange = useCallback((newDocType: DocumentType) => {
+  const handleDocTypeChange = useCallback((newDocType) => {
     setDocType(newDocType);
     resetAllFlows();
   }, [resetAllFlows]);
@@ -238,7 +194,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
   }, [initialDocType, initialAge, isLoggedIn, resetAllFlows, onInitialDocTypeHandled]);
 
 
-  const handleStandardSubmit = useCallback(async (topic: string, currentAge: number) => {
+  const handleStandardSubmit = useCallback(async (topic, currentAge) => {
     if (useGeneration(1)) {
         handleGenerationStart("Создание текста...");
         try {
@@ -254,20 +210,17 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     }
   }, [useGeneration, docType, handleGenerationStart, onSaveGeneration, setResult]);
   
-  const handleConvertToTable = useCallback(async (brokenDiagramCode: string) => {
+  const handleConvertToTable = useCallback(async (brokenDiagramCode) => {
     if (useGeneration(1)) {
         handleGenerationStart("Конвертируем диаграмму в таблицу...");
         try {
             const tableMarkdown = await convertMermaidToTable(brokenDiagramCode);
             if (result && result.text) {
-                // Construct the block we expect to find.
-                // It's brittle, but it's the best we can do without a more complex parsing logic here.
                 const blockToReplace = `\`\`\`mermaid\n${brokenDiagramCode}\n\`\`\``;
                 
-                // Replace the block with the new table
                 const newText = result.text.replace(blockToReplace, tableMarkdown);
 
-                const newResult: GenerationResult = {
+                const newResult = {
                     ...result,
                     text: newText,
                 };
@@ -276,10 +229,9 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
                 if (newText !== result.text) {
                     toast.success('Диаграмма заменена таблицей!');
                 } else {
-                    // Fallback if replacement failed
                     toast.error('Не удалось автоматически заменить диаграмму. Таблица добавлена в конец ответа.');
                     const fallbackText = result.text + '\n\n### Таблица из диаграммы\n\n' + tableMarkdown;
-                    const fallbackResult: GenerationResult = { ...result, text: fallbackText };
+                    const fallbackResult = { ...result, text: fallbackText };
                     setResult(fallbackResult);
                 }
             } else {
@@ -306,7 +258,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
       setAstrologyStep('selection');
   }, [resetAllFlows, remainingGenerations]);
   
-  const handleAstrologySelect = useCallback((type: 'natal' | 'horoscope') => {
+  const handleAstrologySelect = useCallback((type) => {
       if (type === 'natal') {
           if (remainingGenerations < 2) {
               setError('Для натальной карты необходимо 2 генерации.');
@@ -320,14 +272,14 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
        setError('');
   }, [remainingGenerations]);
   
-  const handleNatalSubmit = useCallback(async (data: { date: string, time: string, place: string }) => {
+  const handleNatalSubmit = useCallback(async (data) => {
       if (useGeneration(2)) {
           handleGenerationStart('Составляем вашу натальную карту...');
           setAstrologyStep('generating');
           try {
               const res = await generateNatalChart(data.date, data.time, data.place, setProgressMessage);
               setResult(res);
-              onSaveGeneration({ docType: DocumentType.ASTROLOGY, title: 'Натальная карта', text: res.text });
+              onSaveGeneration({ docType: docType, title: 'Натальная карта', text: res.text });
               setAstrologyStep('completed');
           } catch (err) {
               const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -337,16 +289,16 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
               setIsLoading(false);
           }
       }
-  }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult]);
+  }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult, docType]);
   
-  const handleHoroscopeSubmit = useCallback(async (data: { date: string }) => {
+  const handleHoroscopeSubmit = useCallback(async (data) => {
       if (useGeneration(1)) {
           handleGenerationStart('Составляем ваш гороскоп...');
           setAstrologyStep('generating');
           try {
               const res = await generateHoroscope(data.date, setProgressMessage);
               setResult(res);
-              onSaveGeneration({ docType: DocumentType.ASTROLOGY, title: 'Гороскоп', text: res.text });
+              onSaveGeneration({ docType: docType, title: 'Гороскоп', text: res.text });
               setAstrologyStep('completed');
           } catch (err) {
               const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -356,7 +308,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
               setIsLoading(false);
           }
       }
-  }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult]);
+  }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult, docType]);
 
   // --- Book Writing Flow ---
    const handleStartBookWriting = useCallback(() => {
@@ -364,7 +316,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     setBookWritingStep('form');
   }, [resetAllFlows]);
   
-  const handlePlanSubmit = useCallback(async (request: BookPlanRequest) => {
+  const handlePlanSubmit = useCallback(async (request) => {
       if (useGeneration(1)) {
           handleGenerationStart('Создаем план вашей будущей книги...');
           try {
@@ -381,7 +333,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
       }
   }, [useGeneration, handleGenerationStart]);
 
-  const handleGenerateBook = useCallback(async (editedPlan: BookPlan) => {
+  const handleGenerateBook = useCallback(async (editedPlan) => {
       if (!bookPlan) {
           setError('Исходные данные для книги отсутствуют.');
           return;
@@ -407,15 +359,15 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
               }
 
               const metrics = calculateTextMetrics(fullBookText);
-              const finalResult: GenerationResult = {
-                  docType: DocumentType.BOOK_WRITING,
+              const finalResult = {
+                  docType: docType,
                   text: fullBookText,
                   uniqueness: 0,
                   ...metrics,
                   plan: editedPlan
               };
               setResult(finalResult);
-              onSaveGeneration({ docType: DocumentType.BOOK_WRITING, title: editedPlan.title, text: finalResult.text });
+              onSaveGeneration({ docType: docType, title: editedPlan.title, text: finalResult.text });
               setBookWritingStep('completed');
 
           } catch (err) {
@@ -426,7 +378,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             setIsLoading(false);
           }
       }
-  }, [useGeneration, bookPlan, handleGenerationStart, onSaveGeneration, setResult]);
+  }, [useGeneration, bookPlan, handleGenerationStart, onSaveGeneration, setResult, docType]);
   
     // --- Personal Analysis Flow ---
   const handleStartPersonalAnalysis = useCallback(() => {
@@ -438,7 +390,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
       setPersonalAnalysisStep('form');
   }, [resetAllFlows, remainingGenerations]);
 
-  const handlePersonalAnalysisSubmit = useCallback(async (request: PersonalAnalysisRequest) => {
+  const handlePersonalAnalysisSubmit = useCallback(async (request) => {
       const COST = 1;
       if (useGeneration(COST)) {
           handleGenerationStart('Проводим личностный анализ...');
@@ -446,7 +398,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
           try {
               const res = await generatePersonalAnalysis(request, setProgressMessage);
               setResult(res);
-              onSaveGeneration({ docType: DocumentType.PERSONAL_ANALYSIS, title: `Анализ: "${request.userPrompt.slice(0, 40)}..."`, text: res.text });
+              onSaveGeneration({ docType: docType, title: `Анализ: "${request.userPrompt.slice(0, 40)}..."`, text: res.text });
               setPersonalAnalysisStep('completed');
           } catch (err) {
               const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -456,7 +408,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             setIsLoading(false);
           }
       }
-  }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult]);
+  }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult, docType]);
 
   // --- Document Analysis Flow ---
     const handleStartDocAnalysis = useCallback(() => {
@@ -469,7 +421,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setDocAnalysisStep('upload_form');
     }, [resetAllFlows, remainingGenerations]);
 
-    const handleDocAnalysisSubmit = useCallback(async (files: File[], prompt: string) => {
+    const handleDocAnalysisSubmit = useCallback(async (files, prompt) => {
         const COST = 2;
         if (useGeneration(COST)) {
             handleGenerationStart('Анализируем ваши документы...');
@@ -477,7 +429,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             try {
                 const res = await analyzeUserDocuments(files, prompt, setProgressMessage);
                 setResult(res);
-                onSaveGeneration({ docType: DocumentType.DOCUMENT_ANALYSIS, title: `Анализ документов: "${prompt.slice(0, 40)}..."`, text: res.text });
+                onSaveGeneration({ docType: docType, title: `Анализ документов: "${prompt.slice(0, 40)}..."`, text: res.text });
                 setDocAnalysisStep('completed');
             } catch (err) {
                 const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -487,7 +439,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
                 setIsLoading(false);
             }
         }
-    }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult]);
+    }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult, docType]);
 
   // --- Consultation Flow ---
     const handleStartConsultation = useCallback(() => {
@@ -499,7 +451,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setConsultationStep('selection');
     }, [resetAllFlows, remainingGenerations]);
     
-    const handleSpecialistSelect = useCallback((specialist: Specialist) => {
+    const handleSpecialistSelect = useCallback((specialist) => {
         setSelectedSpecialist(specialist);
         setChatMessages([{
             role: 'model',
@@ -508,20 +460,20 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setConsultationStep('chatting');
     }, []);
 
-    const handleSendMessage = useCallback(async (messageText: string) => {
+    const handleSendMessage = useCallback(async (messageText) => {
         if (!selectedSpecialist) {
             setError("Сессия чата неактивна. Пожалуйста, начните заново.");
             return;
         }
         if (useGeneration(1)) {
             setIsLoading(true);
-            const userMessage: ChatMessage = { role: 'user', text: messageText };
+            const userMessage = { role: 'user', text: messageText };
             const newHistory = [...chatMessages, userMessage];
             setChatMessages(newHistory);
             
             try {
                 const result = await sendSpecialistMessage({ specialist: selectedSpecialist, history: newHistory }, messageText);
-                const modelMessage: ChatMessage = { role: 'model', text: result.text, sources: result.sources };
+                const modelMessage = { role: 'model', text: result.text, sources: result.sources };
                 setChatMessages(prev => [...prev, modelMessage]);
             } catch (err) {
                 const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -543,21 +495,21 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setTutorStep('subject_selection');
     }, [resetAllFlows, remainingGenerations]);
 
-    const handleSubjectSelect = useCallback((subject: string) => {
+    const handleSubjectSelect = useCallback((subject) => {
         setSelectedSubject(subject);
         const introMessage = `Привет! Я твой личный репетитор по предмету "${subject}". Очень рад нашему знакомству! 😊\n\nТы можешь задавать мне любые вопросы по этой теме, просить объяснить сложный материал или помочь с домашним заданием. Мы будем разбираться во всем вместе, шаг за шагом. Не стесняйся спрашивать, если что-то непонятно! \n\nС чего начнем?`;
         setTutorChatMessages([{ role: 'model', text: introMessage }]);
         setTutorStep('chatting');
     }, []);
 
-    const handleTutorSendMessage = useCallback(async (messageText: string) => {
+    const handleTutorSendMessage = useCallback(async (messageText) => {
         if (!selectedSubject) {
             setError("Сессия с репетитором неактивна. Пожалуйста, начните заново.");
             return;
         }
         if (useGeneration(1)) {
             setIsLoading(true);
-            const userMessage: ChatMessage = { role: 'user', text: messageText };
+            const userMessage = { role: 'user', text: messageText };
             const newHistory = [...tutorChatMessages, userMessage];
             setTutorChatMessages(newHistory);
 
@@ -575,7 +527,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
 3.  **Возвращение к теме:** Если ученик чего-то не понял, будьте готовы вернуться и объяснить тему заново, но уже с другими примерами или с другой стороны.
 4.  **Обработка файлов:** Если ученик загружает файл (фото задачи, документ), проанализируйте его и обсуждайте его содержимое в контексте вашего диалога.`;
 
-        const tutorAsSpecialist: Specialist = {
+        const tutorAsSpecialist = {
             id: `tutor-${selectedSubject.toLowerCase()}`,
             name: `Репетитор по ${selectedSubject}`,
             description: `Ваш личный репетитор по предмету: ${selectedSubject}`,
@@ -585,7 +537,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             
             try {
                 const result = await sendSpecialistMessage({ specialist: tutorAsSpecialist, history: newHistory }, messageText);
-                const modelMessage: ChatMessage = { role: 'model', text: result.text, sources: result.sources };
+                const modelMessage = { role: 'model', text: result.text, sources: result.sources };
                 setTutorChatMessages(prev => [...prev, modelMessage]);
             } catch (err) {
                 const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -608,8 +560,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setFileTaskStep('upload_form');
     }, [resetAllFlows, remainingGenerations]);
 
-    const handleFileTaskSubmit = useCallback(async (files: File[], prompt: string) => {
-        const COST = docType === DocumentType.DO_HOMEWORK ? 2 : 1;
+    const handleFileTaskSubmit = useCallback(async (files, prompt) => {
+        const COST = docType === docType.DO_HOMEWORK ? 2 : 1;
         if (useGeneration(COST)) {
             handleGenerationStart('Решаем вашу задачу...');
             setFileTaskStep('generating');
@@ -635,20 +587,20 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
       setError('Недостаточно генераций для выполнения бизнес-задачи.');
       return;
     }
-    if (docType === DocumentType.SWOT_ANALYSIS) setBusinessStep('swot_form');
-    if (docType === DocumentType.COMMERCIAL_PROPOSAL) setBusinessStep('proposal_form');
-    if (docType === DocumentType.BUSINESS_PLAN) setBusinessStep('business_plan_form');
-    if (docType === DocumentType.MARKETING_COPY) setBusinessStep('marketing_form');
+    if (docType === docType.SWOT_ANALYSIS) setBusinessStep('swot_form');
+    if (docType === docType.COMMERCIAL_PROPOSAL) setBusinessStep('proposal_form');
+    if (docType === docType.BUSINESS_PLAN) setBusinessStep('business_plan_form');
+    if (docType === docType.MARKETING_COPY) setBusinessStep('marketing_form');
   }, [resetAllFlows, remainingGenerations, docType]);
 
-  const handleSwotSubmit = useCallback(async (request: SwotAnalysisRequest) => {
+  const handleSwotSubmit = useCallback(async (request) => {
     if (useGeneration(2)) {
         handleGenerationStart('Проводим SWOT-анализ...');
         setBusinessStep('generating');
         try {
             const res = await generateSwotAnalysis(request, setProgressMessage);
             setResult(res);
-            onSaveGeneration({ docType: DocumentType.SWOT_ANALYSIS, title: `SWOT: ${request.description.slice(0, 50)}...`, text: res.text });
+            onSaveGeneration({ docType: docType.SWOT_ANALYSIS, title: `SWOT: ${request.description.slice(0, 50)}...`, text: res.text });
             setBusinessStep('completed');
         } catch (err) {
             const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -660,14 +612,14 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     }
   }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult]);
 
-  const handleCommercialProposalSubmit = useCallback(async (request: CommercialProposalRequest) => {
+  const handleCommercialProposalSubmit = useCallback(async (request) => {
     if (useGeneration(2)) {
         handleGenerationStart('Составляем коммерческое предложение...');
         setBusinessStep('generating');
         try {
             const res = await generateCommercialProposal(request, setProgressMessage);
             setResult(res);
-            onSaveGeneration({ docType: DocumentType.COMMERCIAL_PROPOSAL, title: `КП для: ${request.client}`, text: res.text });
+            onSaveGeneration({ docType: docType.COMMERCIAL_PROPOSAL, title: `КП для: ${request.client}`, text: res.text });
             setBusinessStep('completed');
         } catch (err) {
             const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -679,7 +631,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     }
   }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult]);
 
-  const handleBusinessPlanSubmit = useCallback(async (request: BusinessPlanRequest) => {
+  const handleBusinessPlanSubmit = useCallback(async (request) => {
     if (useGeneration(2)) {
         handleGenerationStart('Создаем структуру бизнес-плана...');
         try {
@@ -696,7 +648,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     }
   }, [useGeneration, handleGenerationStart]);
 
-  const handleGenerateBusinessPlan = useCallback(async (editedPlan: BusinessPlan) => {
+  const handleGenerateBusinessPlan = useCallback(async (editedPlan) => {
     if (!businessPlan) {
         setError('План для бизнеса отсутствует.');
         return;
@@ -721,15 +673,15 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             }
 
             const metrics = calculateTextMetrics(fullPlanText);
-            const finalResult: GenerationResult = {
-                docType: DocumentType.BUSINESS_PLAN,
+            const finalResult = {
+                docType: docType.BUSINESS_PLAN,
                 text: fullPlanText,
                 uniqueness: 0,
                 ...metrics,
                 plan: editedPlan
             };
             setResult(finalResult);
-            onSaveGeneration({ docType: DocumentType.BUSINESS_PLAN, title: editedPlan.title, text: finalResult.text });
+            onSaveGeneration({ docType: docType.BUSINESS_PLAN, title: editedPlan.title, text: finalResult.text });
             setBusinessStep('completed');
 
         } catch (err) {
@@ -742,14 +694,14 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     }
   }, [useGeneration, businessPlan, handleGenerationStart, onSaveGeneration, setResult]);
   
-  const handleMarketingSubmit = useCallback(async (request: MarketingCopyRequest) => {
+  const handleMarketingSubmit = useCallback(async (request) => {
     if(useGeneration(1)) {
       handleGenerationStart(`Создаем: ${request.copyType}...`);
       setBusinessStep('generating');
       try {
         const res = await generateMarketingCopy(request, setProgressMessage);
         setResult(res);
-        onSaveGeneration({ docType: DocumentType.MARKETING_COPY, title: `${request.copyType}: ${request.product}`, text: res.text });
+        onSaveGeneration({ docType: docType.MARKETING_COPY, title: `${request.copyType}: ${request.product}`, text: res.text });
         setBusinessStep('completed');
       } catch(err) {
         const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -764,20 +716,20 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
   // --- Creative Flow ---
   const handleStartCreative = useCallback(() => {
     resetAllFlows();
-    if (docType === DocumentType.TEXT_REWRITING) {
+    if (docType === docType.TEXT_REWRITING) {
       if (remainingGenerations < 1) {
           setError('Недостаточно генераций для творческой задачи.');
           return;
       }
       setCreativeStep('rewriting_form');
-    } else if (docType === DocumentType.SCRIPT) {
+    } else if (docType === docType.SCRIPT) {
       const COST = 2;
       if (remainingGenerations < COST) {
         setError(`Для анализа сценария необходимо ${COST} генерации.`);
         return;
       }
       setCreativeStep('script_upload_form');
-    } else if (docType === DocumentType.AUDIO_SCRIPT) {
+    } else if (docType === docType.AUDIO_SCRIPT) {
         if (remainingGenerations < 2) { // Minimum cost for audio script
             setError('Для создания аудио-скрипта необходимо минимум 2 генерации.');
             return;
@@ -786,7 +738,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     }
   }, [resetAllFlows, docType, remainingGenerations]);
   
-  const handleRewritingSubmit = useCallback(async (request: TextRewritingRequest, file: File | null) => {
+  const handleRewritingSubmit = useCallback(async (request, file) => {
     const textCost = request.originalText ? Math.ceil(request.originalText.length / 5000) : 0;
     const fileCost = file ? 1 : 0;
     const cost = Math.max(1, textCost + fileCost);
@@ -797,7 +749,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         try {
             const res = await rewriteText(request, file, setProgressMessage);
             setResult(res);
-            onSaveGeneration({ docType: DocumentType.TEXT_REWRITING, title: `Переработка текста (Цель: ${request.goal})`, text: res.text });
+            onSaveGeneration({ docType: docType.TEXT_REWRITING, title: `Переработка текста (Цель: ${request.goal})`, text: res.text });
             setCreativeStep('completed');
         } catch (err) {
             const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -809,7 +761,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     }
   }, [useGeneration, handleGenerationStart, onSaveGeneration, setResult]);
 
-  const handleCreativeFileTaskSubmit = useCallback(async (files: File[], prompt: string) => {
+  const handleCreativeFileTaskSubmit = useCallback(async (files, prompt) => {
     const COST = 2;
     if (useGeneration(COST)) {
         handleGenerationStart('Анализируем ваши материалы...');
@@ -829,19 +781,19 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     }
   }, [useGeneration, docType, handleGenerationStart, onSaveGeneration, setResult]);
 
-  const handleAudioScriptTopicSubmit = useCallback((topic: string, duration: number) => {
+  const handleAudioScriptTopicSubmit = useCallback((topic, duration) => {
     setAudioScriptRequest({ topic, duration });
     setCreativeStep('audio_script_config');
   }, []);
 
-  const handleAudioScriptSubmit = useCallback(async (config: Omit<AudioScriptRequest, 'topic' | 'duration'>) => {
+  const handleAudioScriptSubmit = useCallback(async (config) => {
       if (!audioScriptRequest.topic || !audioScriptRequest.duration) {
           setError('Отсутствуют данные о теме или длительности.');
           setCreativeStep('audio_script_topic');
           return;
       }
       
-      const fullRequest: AudioScriptRequest = {
+      const fullRequest = {
           topic: audioScriptRequest.topic,
           duration: audioScriptRequest.duration,
           ...config
@@ -855,7 +807,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
           try {
               const res = await generateAudioScript(fullRequest, setProgressMessage);
               setResult(res);
-              onSaveGeneration({ docType: DocumentType.AUDIO_SCRIPT, title: `Аудио-скрипт: ${fullRequest.topic.slice(0, 40)}...`, text: res.text });
+              onSaveGeneration({ docType: docType.AUDIO_SCRIPT, title: `Аудио-скрипт: ${fullRequest.topic.slice(0, 40)}...`, text: res.text });
               setCreativeStep('completed');
           } catch (err) {
               const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -874,14 +826,14 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setError('Недостаточно генераций для научной задачи.');
         return;
     }
-    if ([DocumentType.ACADEMIC_ARTICLE, DocumentType.GRANT_PROPOSAL].includes(docType)) {
+    if ([docType.ACADEMIC_ARTICLE, docType.GRANT_PROPOSAL].includes(docType)) {
       setScienceStep('article_form');
     }
   }, [resetAllFlows, remainingGenerations, docType]);
   
-  const handleArticlePlanSubmit = useCallback(async (request: AcademicArticleRequest, file?: File | null) => {
+  const handleArticlePlanSubmit = useCallback(async (request, file) => {
       if (useGeneration(1)) {
-          const isGrant = docType === DocumentType.GRANT_PROPOSAL;
+          const isGrant = docType === docType.GRANT_PROPOSAL;
           handleGenerationStart(isGrant ? 'Создаем структуру для гранта...' : 'Создаем структуру научной статьи...');
           try {
               const plan = isGrant
@@ -900,7 +852,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
       }
   }, [useGeneration, handleGenerationStart, docType]);
 
-  const handleGenerateArticle = useCallback(async (editedPlan: ArticlePlan) => {
+  const handleGenerateArticle = useCallback(async (editedPlan) => {
       if (!articlePlan) {
           setError('План статьи отсутствует.');
           return;
@@ -925,7 +877,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
               }
 
               const metrics = calculateTextMetrics(fullArticleText);
-              const finalResult: GenerationResult = {
+              const finalResult = {
                   docType,
                   text: fullArticleText,
                   uniqueness: 0, 
@@ -956,7 +908,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     setScienceFileStep('upload_form');
   }, [resetAllFlows, remainingGenerations]);
 
-  const handleScienceFileTaskSubmit = useCallback(async (files: File[], prompt: string) => {
+  const handleScienceFileTaskSubmit = useCallback(async (files, prompt) => {
     const COST = 2;
     if (useGeneration(COST)) {
         handleGenerationStart('Анализируем ваши научные материалы...');
@@ -982,7 +934,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
     setThesisStep('form');
   }, [resetAllFlows]);
 
-  const handleThesisSubmit = useCallback(async (topic: string, field: string, sections: ThesisSectionInput[]) => {
+  const handleThesisSubmit = useCallback(async (topic, field, sections) => {
     const cost = sections.reduce((acc, s) => {
         return acc + (s.contentType === 'generate' ? s.pagesToGenerate : 0);
     }, 0);
@@ -998,7 +950,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         try {
             const res = await generateFullThesis(topic, field, sections, setProgressMessage);
             setResult(res);
-            onSaveGeneration({ docType: DocumentType.THESIS, title: `Диплом: ${topic}`, text: res.text });
+            onSaveGeneration({ docType: docType.THESIS, title: `Диплом: ${topic}`, text: res.text });
             setThesisStep('completed');
         } catch (err) {
             const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -1021,7 +973,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setCodeStep('form');
     }, [resetAllFlows, remainingGenerations]);
     
-    const handleCodeAnalysisSubmit = useCallback(async (request: CodeGenerationRequest) => {
+    const handleCodeAnalysisSubmit = useCallback(async (request) => {
         if (useGeneration(1)) { // Cost 1 for analysis
             handleGenerationStart('Анализируем вашу задачу...');
             setCodeStep('generating');
@@ -1052,7 +1004,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             try {
                 const res = await generateCode(codeRequest, setProgressMessage);
                 setResult(res);
-                onSaveGeneration({ docType: DocumentType.CODE_GENERATION, title: `Код (${codeRequest.language}): ${codeRequest.taskDescription.slice(0, 40)}...`, text: res.text });
+                onSaveGeneration({ docType: docType.CODE_GENERATION, title: `Код (${codeRequest.language}): ${codeRequest.taskDescription.slice(0, 40)}...`, text: res.text });
                 setCodeStep('completed');
             } catch (err) {
                  const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -1070,8 +1022,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setAnalysisStep('upload_form');
     }, [resetAllFlows]);
 
-    const handleAnalysisSubmit = useCallback(async (files: File[], prompt: string) => {
-        const COST = docType === DocumentType.ANALYSIS_VERIFY ? 3 : 2;
+    const handleAnalysisSubmit = useCallback(async (files, prompt) => {
+        const COST = docType === docType.ANALYSIS_VERIFY ? 3 : 2;
         if (useGeneration(COST)) {
             handleGenerationStart('Проводим анализ...');
             setAnalysisStep('generating');
@@ -1100,7 +1052,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
         setForecastingStep('form');
     }, [resetAllFlows, remainingGenerations]);
 
-    const handleForecastSubmit = useCallback(async (prompt: string) => {
+    const handleForecastSubmit = useCallback(async (prompt) => {
         const COST = 3;
         if (useGeneration(COST)) {
             handleGenerationStart('Собираем данные для прогноза...');
@@ -1108,7 +1060,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({ isLoggedIn, remain
             try {
                 const res = await generateForecasting(prompt, setProgressMessage);
                 setResult(res);
-                onSaveGeneration({ docType: DocumentType.FORECASTING, title: `Прогноз: ${prompt.slice(0, 40)}...`, text: res.text });
+                onSaveGeneration({ docType: docType.FORECASTING, title: `Прогноз: ${prompt.slice(0, 40)}...`, text: res.text });
                 setForecastingStep('completed');
             } catch (err) {
                 const msg = err instanceof Error ? err.message : JSON.stringify(err);
