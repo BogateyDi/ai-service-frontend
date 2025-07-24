@@ -1,16 +1,8 @@
 import React from 'react';
 
-interface VerticalSelectorProps {
-  items: string[];
-  selectedValue: string;
-  onSelect: (value: string) => void;
-  isDisabled?: boolean;
-  title: string;
-}
-
 const BUTTON_HEIGHT = 38; // px
 
-export const VerticalSelector: React.FC<VerticalSelectorProps> = ({
+export const VerticalSelector = ({
   items,
   selectedValue,
   onSelect,
@@ -19,7 +11,7 @@ export const VerticalSelector: React.FC<VerticalSelectorProps> = ({
 }) => {
   const selectedIndex = items.indexOf(selectedValue);
 
-  const highlightStyle: React.CSSProperties = {
+  const highlightStyle = {
     height: `${BUTTON_HEIGHT}px`,
     transform: selectedIndex > -1 ? `translateY(${selectedIndex * BUTTON_HEIGHT}px)` : 'translateY(0)',
     opacity: selectedIndex > -1 ? 1 : 0,
@@ -36,3 +28,22 @@ export const VerticalSelector: React.FC<VerticalSelectorProps> = ({
             style={highlightStyle}
         />
         <div className="relative flex flex-col w-full z-10">
+            {items.map((item) => (
+            <button
+                key={item}
+                type="button"
+                onClick={() => onSelect(item)}
+                disabled={isDisabled}
+                className={`w-full px-4 text-sm font-medium rounded-lg transition-colors duration-300 focus:outline-none text-center`}
+                style={{ height: `${BUTTON_HEIGHT}px` }}
+            >
+                <span className={`transition-colors duration-300 ${selectedValue === item ? 'text-white' : 'text-[var(--text-dark-secondary)] hover:text-[var(--text-dark-primary)]'}`}>
+                 {item}
+                </span>
+            </button>
+            ))}
+        </div>
+        </div>
+    </div>
+  );
+};
