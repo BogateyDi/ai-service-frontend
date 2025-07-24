@@ -5,7 +5,7 @@ import { PricingView } from './components/PricingView.js';
 import { AssistantView } from './components/AssistantView.js';
 import { TermsOfUseModal } from './components/TermsOfUseModal.js';
 import { PurchaseSuccessModal } from './components/PurchaseSuccessModal.js';
-import { AppView, GenerationPackage, UserAccount, ChatMessage, GenerationRecord, DocumentType, GenerationResult, FavoriteService } from './types.js';
+import { AppView } from './types.js';
 import { Toaster, toast } from 'react-hot-toast';
 import { Footer } from './components/Footer.js';
 import { sendMessage } from './services/geminiService.js';
@@ -17,8 +17,8 @@ const GENERATION_HISTORY_LIMIT = 20;
 const DEFAULT_STORAGE_LIMIT_BYTES = 1 * 1024 * 1024; // 1 MB
 
 // New component for the background effect
-const MatrixBackground: React.FC<{ isAnimating: boolean }> = ({ isAnimating }) => {
-    const [columns, setColumns] = useState<{ id: number; chars: string; style: React.CSSProperties }[]>([]);
+const MatrixBackground = ({ isAnimating }) => {
+    const [columns, setColumns] = useState([]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -95,21 +95,21 @@ const MatrixBackground: React.FC<{ isAnimating: boolean }> = ({ isAnimating }) =
 
 
 export default function App() {
-  const [userAccounts, setUserAccounts] = useState<Map<string, UserAccount>>(() => {
+  const [userAccounts, setUserAccounts] = useState(() => {
     try {
       const saved = localStorage.getItem('userAccounts');
       const parsedAccounts = saved ? JSON.parse(saved) : [];
       
-      const validateChatHistory = (history: any[]): ChatMessage[] => {
+      const validateChatHistory = (history) => {
          return (history || [])
             .filter(
-                (msg: any): msg is ChatMessage => (msg.role === 'user' || msg.role === 'model') && typeof msg.text === 'string'
+                (msg) => (msg.role === 'user' || msg.role === 'model') && typeof msg.text === 'string'
             )
-            .map((msg: any) => {
-                const newMsg: ChatMessage = { role: msg.role, text: msg.text };
+            .map((msg) => {
+                const newMsg = { role: msg.role, text: msg.text };
                 if (Array.isArray(msg.sources)) {
                     newMsg.sources = msg.sources.filter(
-                        (s: any) => typeof s === 'object' && s !== null && typeof s.uri === 'string' && typeof s.title === 'string'
+                        (s) => typeof s === 'object' && s !== null && typeof s.uri === 'string' && typeof s.title === 'string'
                     );
                 }
                 if (typeof msg.timestamp === 'number') {
@@ -122,34 +122,34 @@ export default function App() {
             });
       };
 
-      const validateFavoriteServices = (services: any): FavoriteService[] => {
+      const validateFavoriteServices = (services) => {
         if (!Array.isArray(services)) return [];
         return services.map(s => {
             if (typeof s === 'string') { // Old format (string)
-                return { docType: s as DocumentType };
+                return { docType: s };
             }
             if (typeof s === 'object' && s !== null && typeof s.docType === 'string') { // New format (object)
-                const fav: FavoriteService = { docType: s.docType };
+                const fav = { docType: s.docType };
                 if (typeof s.age === 'number') {
                     fav.age = s.age;
                 }
                 return fav;
             }
             return null;
-        }).filter((s): s is FavoriteService => s !== null);
+        }).filter((s) => s !== null);
       };
 
-      const accountsWithDefaults = parsedAccounts.map(([code, account]: [string, any]) => {
+      const accountsWithDefaults = parsedAccounts.map(([code, account]) => {
           const validatedMirraHistory = validateChatHistory(account.mirraChatHistory).slice(-CHAT_HISTORY_LIMIT);
           const validatedDaryHistory = validateChatHistory(account.daryChatHistory).slice(-CHAT_HISTORY_LIMIT);
           
           const validatedGenerationHistory = (account.generationHistory || []).filter(
-              (rec: any): rec is GenerationRecord => typeof rec.id === 'string' && typeof rec.title === 'string' && typeof rec.docType === 'string' && typeof rec.timestamp === 'number' && typeof rec.text === 'string'
+              (rec) => typeof rec.id === 'string' && typeof rec.title === 'string' && typeof rec.docType === 'string' && typeof rec.timestamp === 'number' && typeof rec.text === 'string'
           ).slice(0, GENERATION_HISTORY_LIMIT);
 
           const validatedFavoriteServices = validateFavoriteServices(account.favoriteServices);
 
-          const userAccount: UserAccount = {
+          const userAccount = {
               generations: typeof account === 'number' ? account : (account.generations || 0),
               referrerCode: account.referrerCode,
               generationHistory: validatedGenerationHistory,
@@ -171,36 +171,36 @@ export default function App() {
     }
   });
 
-  const [currentUserCode, setCurrentUserCode] = useState<string | null>(() => localStorage.getItem('currentUserCode') || null);
-  const [remainingGenerations, setRemainingGenerations] = useState<number>(0);
-  const [favoriteServices, setFavoriteServices] = useState<FavoriteService[]>([]);
+  const [currentUserCode, setCurrentUserCode] = useState(() => localStorage.getItem('currentUserCode') || null);
+  const [remainingGenerations, setRemainingGenerations] = useState(0);
+  const [favoriteServices, setFavoriteServices] = useState([]);
   
   // Mirra State
-  const [hasMirra, setHasMirra] = useState<boolean>(false);
-  const [mirraChatHistory, setMirraChatHistory] = useState<ChatMessage[]>([]);
+  const [hasMirra, setHasMirra] = useState(false);
+  const [mirraChatHistory, setMirraChatHistory] = useState([]);
   const [mirraSettings, setMirraSettings] = useState({ internetEnabled: true, memoryEnabled: true });
-  const [isMirraChatLoading, setIsMirraChatLoading] = useState<boolean>(false);
+  const [isMirraChatLoading, setIsMirraChatLoading] = useState(false);
 
   // Dary State
-  const [hasDary, setHasDary] = useState<boolean>(false);
-  const [daryChatHistory, setDaryChatHistory] = useState<ChatMessage[]>([]);
+  const [hasDary, setHasDary] = useState(false);
+  const [daryChatHistory, setDaryChatHistory] = useState([]);
   const [darySettings, setDarySettings] = useState({ internetEnabled: true, memoryEnabled: true });
-  const [isDaryChatLoading, setIsDaryChatLoading] = useState<boolean>(false);
+  const [isDaryChatLoading, setIsDaryChatLoading] = useState(false);
 
-  const [view, setView] = useState<AppView>(AppView.GENERATOR);
-  const [activeAssistant, setActiveAssistant] = useState<'mirra' | 'dary' | null>(null);
+  const [view, setView] = useState(AppView.GENERATOR);
+  const [activeAssistant, setActiveAssistant] = useState(null);
 
-  const [isTermsModalOpen, setIsTermsModalOpen] = useState<boolean>(false);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [isPurchaseSuccessModalOpen, setIsPurchaseSuccessModalOpen] = useState<boolean>(false);
-  const [lastPurchasedCode, setLastPurchasedCode] = useState<string | null>(null);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPurchaseSuccessModalOpen, setIsPurchaseSuccessModalOpen] = useState(false);
+  const [lastPurchasedCode, setLastPurchasedCode] = useState(null);
 
   // Global state for generation result to persist across views
-  const [currentResult, setCurrentResult] = useState<GenerationResult | null>(null);
+  const [currentResult, setCurrentResult] = useState(null);
   
   // State to trigger navigation to a specific generator service
-  const [initialGeneratorDocType, setInitialGeneratorDocType] = useState<DocumentType | null>(null);
-  const [initialGeneratorAge, setInitialGeneratorAge] = useState<number | null>(null);
+  const [initialGeneratorDocType, setInitialGeneratorDocType] = useState(null);
+  const [initialGeneratorAge, setInitialGeneratorAge] = useState(null);
 
   // Admin Mode State
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -232,7 +232,7 @@ export default function App() {
   // Update state when user logs in/out
   useEffect(() => {
     if (currentUserCode && userAccounts.has(currentUserCode)) {
-      const account = userAccounts.get(currentUserCode)!;
+      const account = userAccounts.get(currentUserCode);
       setRemainingGenerations(account.generations);
       setFavoriteServices(account.favoriteServices || []);
       // Mirra
@@ -281,7 +281,7 @@ export default function App() {
     } catch (e) { console.error("Could not save current user to localStorage", e); }
   }, [currentUserCode]);
 
-  const handleLogin = useCallback((code: string) => {
+  const handleLogin = useCallback((code) => {
     if (userAccounts.has(code)) {
       setCurrentUserCode(code);
       toast.success('Вы успешно вошли в систему!');
@@ -297,7 +297,7 @@ export default function App() {
     setView(AppView.GENERATOR);
   }, []);
 
-  const updateUserAccount = useCallback((updateFn: (account: UserAccount) => UserAccount) => {
+  const updateUserAccount = useCallback((updateFn) => {
     if (!currentUserCode) return;
     setUserAccounts(prev => {
         const newAccounts = new Map(prev);
@@ -320,11 +320,11 @@ export default function App() {
     });
   }, [currentUserCode]);
   
-  const _registerNewUser = useCallback((initialGenerations: number, hasMirra: boolean, hasDary: boolean) => {
+  const _registerNewUser = useCallback((initialGenerations, hasMirra, hasDary) => {
     const newCode = crypto.randomUUID().replace(/-/g, '').toUpperCase().slice(0, 10);
     const referralCode = localStorage.getItem('referralCode');
 
-    const newAccount: UserAccount = {
+    const newAccount = {
       generations: initialGenerations,
       hasMirra,
       hasDary,
@@ -343,9 +343,9 @@ export default function App() {
       updatedAccounts.set(newCode, newAccount);
       
       if (referralCode && updatedAccounts.has(referralCode)) {
-          const referrerAccount = updatedAccounts.get(referralCode)!;
+          const referrerAccount = updatedAccounts.get(referralCode);
           const bonus = (hasMirra || hasDary) ? 250 : initialGenerations;
-          const updatedReferrerAccount: UserAccount = {
+          const updatedReferrerAccount = {
               ...referrerAccount,
               generations: referrerAccount.generations + bonus,
           };
@@ -362,7 +362,7 @@ export default function App() {
     setIsPurchaseSuccessModalOpen(true);
   }, []);
 
-  const handlePurchase = useCallback((pkg: GenerationPackage) => {
+  const handlePurchase = useCallback((pkg) => {
     const REFERRAL_BONUS = pkg.generations;
 
     if (currentUserCode) { // Existing user topping up
@@ -374,8 +374,8 @@ export default function App() {
             updatedAccounts.set(currentUserCode, updatedAccount);
 
             if (account.referrerCode && updatedAccounts.has(account.referrerCode)) {
-                const referrerAccount = updatedAccounts.get(account.referrerCode)!;
-                const updatedReferrerAccount: UserAccount = {
+                const referrerAccount = updatedAccounts.get(account.referrerCode);
+                const updatedReferrerAccount = {
                     ...referrerAccount,
                     generations: referrerAccount.generations + REFERRAL_BONUS,
                 };
@@ -392,7 +392,7 @@ export default function App() {
     }
   }, [currentUserCode, _registerNewUser]);
   
-  const handleAssistantPurchase = useCallback((assistant: 'mirra' | 'dary') => {
+  const handleAssistantPurchase = useCallback((assistant) => {
     const ASSISTANT_BONUS = 250;
     const isMirra = assistant === 'mirra';
 
@@ -407,7 +407,7 @@ export default function App() {
             const updatedAccounts = new Map(prev);
             const currentAccount = updatedAccounts.get(currentUserCode);
             if (currentAccount) {
-                const updatedAccount: UserAccount = {
+                const updatedAccount = {
                     ...currentAccount,
                     generations: currentAccount.generations + ASSISTANT_BONUS,
                     hasMirra: currentAccount.hasMirra || isMirra,
@@ -416,8 +416,8 @@ export default function App() {
                 updatedAccounts.set(currentUserCode, updatedAccount);
 
                 if (currentAccount.referrerCode && updatedAccounts.has(currentAccount.referrerCode)) {
-                    const referrerAccount = updatedAccounts.get(currentAccount.referrerCode)!;
-                    const updatedReferrerAccount: UserAccount = {
+                    const referrerAccount = updatedAccounts.get(currentAccount.referrerCode);
+                    const updatedReferrerAccount = {
                         ...referrerAccount,
                         generations: referrerAccount.generations + ASSISTANT_BONUS,
                     };
@@ -437,7 +437,7 @@ export default function App() {
     }
   }, [currentUserCode, userAccounts, _registerNewUser]);
 
-  const useGeneration = useCallback((cost: number = 1) => {
+  const useGeneration = useCallback((cost = 1) => {
     if (!currentUserCode) {
         toast.error(`Пожалуйста, войдите или приобретите пакет для начала работы.`);
         return false;
@@ -457,9 +457,9 @@ export default function App() {
     }
   }, [currentUserCode, userAccounts]);
   
-  const addGenerationToHistory = useCallback((record: { docType: DocumentType; title: string; text: string; }) => {
+  const addGenerationToHistory = useCallback((record) => {
       updateUserAccount(account => {
-        const newRecord: GenerationRecord = {
+        const newRecord = {
             id: crypto.randomUUID(),
             timestamp: Date.now(),
             ...record,
@@ -470,7 +470,7 @@ export default function App() {
     });
   }, [updateUserAccount]);
 
-  const handleToggleSetting = useCallback((assistant: 'mirra' | 'dary', setting: 'internetEnabled' | 'memoryEnabled') => {
+  const handleToggleSetting = useCallback((assistant, setting) => {
       updateUserAccount(account => {
         const isMirra = assistant === 'mirra';
         const settingsKey = isMirra ? 'mirraSettings' : 'darySettings';
@@ -482,7 +482,7 @@ export default function App() {
     });
   }, [updateUserAccount]);
   
-    const handleAddFavoriteService = useCallback((service: FavoriteService) => {
+    const handleAddFavoriteService = useCallback((service) => {
         updateUserAccount(account => {
             const currentFavorites = account.favoriteServices || [];
             if (currentFavorites.length >= 2) {
@@ -506,7 +506,7 @@ export default function App() {
         });
     }, [updateUserAccount]);
 
-    const handleRemoveFavoriteService = useCallback((serviceToRemove: FavoriteService) => {
+    const handleRemoveFavoriteService = useCallback((serviceToRemove) => {
         updateUserAccount(account => {
             const currentFavorites = account.favoriteServices || [];
             const newFavorites = currentFavorites.filter(fav => {
@@ -523,7 +523,7 @@ export default function App() {
         });
     }, [updateUserAccount]);
 
-    const handleNavigateToGeneratorService = useCallback((service: FavoriteService) => {
+    const handleNavigateToGeneratorService = useCallback((service) => {
         setInitialGeneratorDocType(service.docType);
         if (service.age) {
           setInitialGeneratorAge(service.age);
@@ -543,7 +543,7 @@ export default function App() {
         `Делись этой ссылкой и получайте бонусы вместе!\n\n` +
         `https://aipomochnik.ru?ref=${currentUserCode}`;
         
-    const referralMessage: ChatMessage = {
+    const referralMessage = {
         role: 'model',
         text: detailedReferralText,
         timestamp: Date.now(),
@@ -557,7 +557,7 @@ export default function App() {
     }
   }, [currentUserCode, mirraChatHistory, mirraSettings.memoryEnabled, updateUserAccount]);
 
-  const handleSendMessage = useCallback(async (assistant: 'mirra' | 'dary', message: ChatMessage) => {
+  const handleSendMessage = useCallback(async (assistant, message) => {
     if (assistant === 'mirra' && message.text.trim().toUpperCase() === 'RA951599') {
         toast.success('Панель администратора активирована.');
         setIsAdminMode(true);
@@ -579,7 +579,7 @@ export default function App() {
     const settings = currentAccount[isMirra ? 'mirraSettings' : 'darySettings'];
     const history = currentAccount[isMirra ? 'mirraChatHistory' : 'daryChatHistory'];
     
-    const userMessage: ChatMessage = message;
+    const userMessage = message;
     const optimisticHistory = [...history, userMessage];
     setHistory(optimisticHistory);
     setLoading(true);
@@ -588,7 +588,7 @@ export default function App() {
         const { memoryEnabled, internetEnabled } = settings;
         const historyForApi = memoryEnabled ? history : [];
         
-        let attachment: GenerationRecord | undefined;
+        let attachment;
         if (userMessage.sharedGenerationId) {
             attachment = (currentAccount.generationHistory || []).find(r => r.id === userMessage.sharedGenerationId);
         }
@@ -608,7 +608,7 @@ export default function App() {
         if (processedText.includes('{USER_CODE}')) {
             processedText = processedText.replace(/{USER_CODE}/g, currentUserCode);
         }
-        const modelMessage: ChatMessage = { role: 'model', text: processedText, sources: result.sources, timestamp: Date.now() };
+        const modelMessage = { role: 'model', text: processedText, sources: result.sources, timestamp: Date.now() };
 
         setUserAccounts(prevAccounts => {
             const account = prevAccounts.get(currentUserCode);
@@ -621,7 +621,7 @@ export default function App() {
             const finalHistory = [...optimisticHistory, modelMessage].slice(-CHAT_HISTORY_LIMIT);
             const historyKey = isMirra ? 'mirraChatHistory' : 'daryChatHistory';
 
-            const updatedAccount: UserAccount = { 
+            const updatedAccount = { 
                 ...account,
                 generations: account.generations - cost,
                 [historyKey]: memoryEnabled ? finalHistory : account[historyKey],
@@ -658,7 +658,7 @@ export default function App() {
     }
   }, [currentUserCode, userAccounts]);
   
-  const shareGenerationWithAssistant = async (assistant: 'mirra' | 'dary', result: GenerationResult) => {
+  const shareGenerationWithAssistant = async (assistant, result) => {
       const isMirra = assistant === 'mirra';
       if (!currentUserCode || (isMirra && !hasMirra) || (!isMirra && !hasDary)) {
           toast.error(`Ассистент "${isMirra ? 'Миррая' : 'Дарий'}" не приобретен.`);
@@ -692,8 +692,8 @@ export default function App() {
         message: 'Ассистент знакомится с материалами и готовит ответ. Пожалуйста, подождите...',
       });
 
-      let generationRecord: GenerationRecord;
-      const currentAccount = userAccounts.get(currentUserCode!);
+      let generationRecord;
+      const currentAccount = userAccounts.get(currentUserCode);
       const existingRecord = (currentAccount?.generationHistory || []).find(h => h.text === result.text);
 
       if (existingRecord) {
@@ -716,7 +716,7 @@ export default function App() {
 
       const userMessageText = isMirra ? `Привет, Миррая! Я хочу обсудить этот контент, который я только что сгенерировал(а).` : `Проанализируй следующий контент:`;
 
-      const chatMessage: ChatMessage = {
+      const chatMessage = {
           role: 'user',
           text: userMessageText,
           timestamp: Date.now(),
@@ -736,7 +736,7 @@ export default function App() {
   };
 
 
-  const headerContent: { [key in AppView]?: { title: string; subtitle?: string } } = {
+  const headerContent = {
     [AppView.GENERATOR]: {
       title: 'Ваш многофункциональный сервис',
     },
@@ -751,9 +751,9 @@ export default function App() {
         : 'Объективный и лаконичный AI-ассистент для получения точной информации без лишних слов.',
     }
   };
-  const currentHeader = headerContent[view] || headerContent[AppView.GENERATOR]!;
+  const currentHeader = headerContent[view] || headerContent[AppView.GENERATOR];
 
-  const handleSelectAssistant = (assistant: 'mirra' | 'dary') => {
+  const handleSelectAssistant = (assistant) => {
       setView(AppView.ASSISTANT);
       setActiveAssistant(assistant);
       setIsAdminMode(false); // Ensure admin mode is off when switching assistants

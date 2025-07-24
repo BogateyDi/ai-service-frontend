@@ -1,33 +1,9 @@
-import { 
-    DocumentType, 
-    GenerationResult, 
-    BookPlanRequest, 
-    BookPlan, 
-    BookChapter,
-    SwotAnalysisRequest,
-    CommercialProposalRequest,
-    BusinessPlanRequest,
-    BusinessPlan,
-    BusinessPlanSection,
-    MarketingCopyRequest,
-    TextRewritingRequest,
-    AcademicArticleRequest,
-    ArticlePlan,
-    ArticleSection,
-    CodeGenerationRequest,
-    CodeAnalysisResult,
-    ThesisSectionInput,
-    PersonalAnalysisRequest,
-    ChatMessage,
-    GenerationRecord,
-    AudioScriptRequest,
-    Specialist,
-} from '../types.js';
+import { DocumentType } from '../types.js';
 
 const BACKEND_URL = 'https://ai-service-backend-8lea.onrender.com';
 
 // #region API Call Helpers
-async function handleResponse(response: Response) {
+async function handleResponse(response) {
     if (!response.ok) {
         const errorText = await response.text();
         // Try to parse as JSON for more detailed errors from backend
@@ -41,7 +17,7 @@ async function handleResponse(response: Response) {
     return response.json();
 }
 
-async function apiCall(operation: string, payload: any): Promise<any> {
+async function apiCall(operation, payload) {
     const response = await fetch(`${BACKEND_URL}/api/json`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,7 +26,7 @@ async function apiCall(operation: string, payload: any): Promise<any> {
     return handleResponse(response);
 }
 
-async function apiCallWithFiles(operation: string, payload: any, files: File[]): Promise<any> {
+async function apiCallWithFiles(operation, payload, files) {
     const formData = new FormData();
     formData.append('operation', operation);
     formData.append('payload', JSON.stringify(payload));
@@ -65,7 +41,7 @@ async function apiCallWithFiles(operation: string, payload: any, files: File[]):
 // #endregion
 
 // #region Helper Functions
-export const calculateTextMetrics = (text: string): { tokenCount: number; pageCount: number } => {
+export const calculateTextMetrics = (text) => {
     if (!text) {
         return { tokenCount: 0, pageCount: 0 };
     }
@@ -75,33 +51,22 @@ export const calculateTextMetrics = (text: string): { tokenCount: number; pageCo
     return { tokenCount, pageCount };
 };
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // #endregion
 
 // #region Chat Functions
-interface ChatContext {
-    assistant: 'mirra' | 'dary';
-    history: ChatMessage[];
-    settings: { internetEnabled: boolean; memoryEnabled: boolean };
-}
-
-interface SpecialistChatContext {
-    specialist: Specialist;
-    history: ChatMessage[];
-}
-
 export const sendMessage = async (
-    chatContext: ChatContext,
-    message: string,
-    attachment?: GenerationRecord
-): Promise<{ text: string, sources?: any[] }> => {
+    chatContext,
+    message,
+    attachment
+) => {
     return apiCall('sendMessage', { chatContext, message, attachment });
 };
 
 export const sendSpecialistMessage = async (
-    chatContext: SpecialistChatContext,
-    message: string,
-): Promise<{ text: string, sources?: any[] }> => {
+    chatContext,
+    message,
+) => {
     return apiCall('sendSpecialistMessage', { chatContext, message });
 }
 // #endregion
@@ -109,80 +74,80 @@ export const sendSpecialistMessage = async (
 // #region Public Service Functions
 
 // Student / Standard Generation
-export const generateText = (docType: DocumentType, topic: string, age: number, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateText = (docType, topic, age, onProgressUpdate) => {
     onProgressUpdate?.('Отправка запроса на сервер...');
     return apiCall('generateText', { docType, topic, age });
 };
 
 // Astrology
-export const generateNatalChart = (date: string, time: string, place: string, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateNatalChart = (date, time, place, onProgressUpdate) => {
     onProgressUpdate?.('Создаем карту...');
     return apiCall('generateNatalChart', { date, time, place });
 };
 
-export const generateHoroscope = (date: string, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateHoroscope = (date, onProgressUpdate) => {
     onProgressUpdate?.('Составляем прогноз...');
     return apiCall('generateHoroscope', { date });
 };
 
 // Book Writing
-export const generateBookPlan = (request: BookPlanRequest, onProgressUpdate?: (message: string) => void): Promise<BookPlan> => {
+export const generateBookPlan = (request, onProgressUpdate) => {
     onProgressUpdate?.('Продумываем сюжет...');
     return apiCall('generateBookPlan', request);
 };
 
-export const generateSingleChapter = (chapter: BookChapter, bookTitle: string, genre: string, style: string, readerAge: number): Promise<string> => {
+export const generateSingleChapter = (chapter, bookTitle, genre, style, readerAge) => {
     return apiCall('generateSingleChapter', { chapter, bookTitle, genre, style, readerAge }).then(res => res.text);
 };
 
 // File Tasks
-export const solveTaskFromFiles = (files: File[], prompt: string, docType: DocumentType, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const solveTaskFromFiles = (files, prompt, docType, onProgressUpdate) => {
     onProgressUpdate?.('Отправка файлов на сервер...');
     return apiCallWithFiles('solveTaskFromFiles', { prompt, docType }, files);
 };
 
-export const analyzeScienceTaskFromFiles = (files: File[], prompt: string, docType: DocumentType, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const analyzeScienceTaskFromFiles = (files, prompt, docType, onProgressUpdate) => {
     onProgressUpdate?.('Отправка файлов на сервер...');
     return apiCallWithFiles('analyzeScienceTaskFromFiles', { prompt, docType }, files);
 };
 
-export const analyzeCreativeTaskFromFiles = (files: File[], prompt: string, docType: DocumentType, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const analyzeCreativeTaskFromFiles = (files, prompt, docType, onProgressUpdate) => {
     onProgressUpdate?.('Отправка файлов на сервер...');
     return apiCallWithFiles('analyzeCreativeTaskFromFiles', { prompt, docType }, files);
 };
 
-export const analyzeUserDocuments = (files: File[], prompt: string, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const analyzeUserDocuments = (files, prompt, onProgressUpdate) => {
     onProgressUpdate?.('Отправка файлов на сервер...');
     return apiCallWithFiles('analyzeUserDocuments', { prompt }, files);
 };
 
 // Business
-export const generateSwotAnalysis = (request: SwotAnalysisRequest, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateSwotAnalysis = (request, onProgressUpdate) => {
     onProgressUpdate?.('Проводим SWOT-анализ...');
     return apiCall('generateSwotAnalysis', request);
 };
 
-export const generateCommercialProposal = (request: CommercialProposalRequest, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateCommercialProposal = (request, onProgressUpdate) => {
     onProgressUpdate?.('Составляем коммерческое предложение...');
     return apiCall('generateCommercialProposal', request);
 };
 
-export const generateBusinessPlan = (request: BusinessPlanRequest, onProgressUpdate?: (message: string) => void): Promise<BusinessPlan> => {
+export const generateBusinessPlan = (request, onProgressUpdate) => {
     onProgressUpdate?.('Создаем структуру бизнес-плана...');
     return apiCall('generateBusinessPlan', request);
 };
 
-export const generateSingleBusinessSection = (section: BusinessPlanSection, planTitle: string, industry: string): Promise<string> => {
+export const generateSingleBusinessSection = (section, planTitle, industry) => {
     return apiCall('generateSingleBusinessSection', { section, planTitle, industry }).then(res => res.text);
 };
 
-export const generateMarketingCopy = (request: MarketingCopyRequest, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateMarketingCopy = (request, onProgressUpdate) => {
     onProgressUpdate?.('Создаем маркетинговый текст...');
     return apiCall('generateMarketingCopy', request);
 };
 
 // Creative
-export const rewriteText = (request: TextRewritingRequest, file: File | null, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const rewriteText = (request, file, onProgressUpdate) => {
     onProgressUpdate?.('Перерабатываем ваш текст...');
     if (file) {
         return apiCallWithFiles('rewriteText', request, [file]);
@@ -190,18 +155,18 @@ export const rewriteText = (request: TextRewritingRequest, file: File | null, on
     return apiCall('rewriteText', request);
 };
 
-export const generateAudioScript = (request: AudioScriptRequest, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateAudioScript = (request, onProgressUpdate) => {
     onProgressUpdate?.('Создаем ваш аудио-сценарий...');
     return apiCall('generateAudioScript', request);
 };
 
 // Science
-export const generateArticlePlan = (request: AcademicArticleRequest, onProgressUpdate?: (message: string) => void): Promise<ArticlePlan> => {
+export const generateArticlePlan = (request, onProgressUpdate) => {
     onProgressUpdate?.('Создаем структуру научной статьи...');
     return apiCall('generateArticlePlan', request);
 };
 
-export const generateGrantPlan = (request: AcademicArticleRequest, file: File | null, onProgressUpdate?: (message: string) => void): Promise<ArticlePlan> => {
+export const generateGrantPlan = (request, file, onProgressUpdate) => {
      onProgressUpdate?.('Создаем структуру для гранта...');
      if (file) {
         return apiCallWithFiles('generateGrantPlan', request, [file]);
@@ -209,12 +174,12 @@ export const generateGrantPlan = (request: AcademicArticleRequest, file: File | 
      return apiCall('generateGrantPlan', request);
 };
 
-export const generateSingleArticleSection = (section: ArticleSection, planTitle: string, field: string): Promise<string> => {
+export const generateSingleArticleSection = (section, planTitle, field) => {
     return apiCall('generateSingleArticleSection', { section, planTitle, field }).then(res => res.text);
 };
 
 // Thesis
-export const generateFullThesis = async (topic: string, field: string, sections: ThesisSectionInput[], onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateFullThesis = async (topic, field, sections, onProgressUpdate) => {
     let fullText = `# Дипломная работа\n## Тема: ${topic}\n\n`;
 
     const sectionsToGenerate = sections.filter(s => s.contentType === 'generate');
@@ -230,7 +195,7 @@ export const generateFullThesis = async (topic: string, field: string, sections:
 
              fullText += `\n\n### ${section.title}\n\n`;
 
-             const generated = generatedSections.find((gs: any) => gs.id === section.id);
+             const generated = generatedSections.find((gs) => gs.id === section.id);
              if (generated) {
                 fullText += generated.text;
              } else if (section.contentType === 'text') {
@@ -261,35 +226,35 @@ export const generateFullThesis = async (topic: string, field: string, sections:
 
 
 // Code
-export const analyzeCodeTask = (request: CodeGenerationRequest, onProgressUpdate?: (message: string) => void): Promise<CodeAnalysisResult> => {
+export const analyzeCodeTask = (request, onProgressUpdate) => {
     onProgressUpdate?.('Анализируем вашу задачу...');
     return apiCall('analyzeCodeTask', request);
 };
-export const generateCode = (request: CodeGenerationRequest, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateCode = (request, onProgressUpdate) => {
     onProgressUpdate?.('Генерация кода...');
     return apiCall('generateCode', request);
 };
 
 // Personal Analysis
-export const generatePersonalAnalysis = (request: PersonalAnalysisRequest, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generatePersonalAnalysis = (request, onProgressUpdate) => {
     onProgressUpdate?.('Проводим личностный анализ...');
     return apiCall('generatePersonalAnalysis', request);
 };
 
 // Analysis
-export const performAnalysis = (files: File[], prompt: string, docType: DocumentType, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const performAnalysis = (files, prompt, docType, onProgressUpdate) => {
     onProgressUpdate?.('Проводим анализ...');
     return apiCallWithFiles('performAnalysis', { prompt, docType }, files);
 };
 
 // Forecasting
-export const generateForecasting = (prompt: string, onProgressUpdate?: (message: string) => void): Promise<GenerationResult> => {
+export const generateForecasting = (prompt, onProgressUpdate) => {
     onProgressUpdate?.('Собираем данные для прогноза...');
     return apiCall('generateForecasting', { prompt });
 };
 
 // Mermaid to Table
-export const convertMermaidToTable = async (brokenCode: string): Promise<string> => {
+export const convertMermaidToTable = async (brokenCode) => {
     const result = await apiCall('convertMermaidToTable', { brokenCode });
     return result.text;
 };

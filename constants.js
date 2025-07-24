@@ -1,8 +1,8 @@
-import { DocumentType, GenerationPackage, Specialist, VoiceProfile } from './types.js';
+import { DocumentType } from './types.js';
 
-export const CHILDREN_AGES: number[] = Array.from({ length: 12 }, (_, i) => i + 6); // Ages 6 to 17
+export const CHILDREN_AGES = Array.from({ length: 12 }, (_, i) => i + 6); // Ages 6 to 17
 
-export const STUDENT_DOC_TYPES_STANDARD: DocumentType[] = [
+export const STUDENT_DOC_TYPES_STANDARD = [
   DocumentType.COMPOSITION,
   DocumentType.SUMMARY,
   DocumentType.ABSTRACT,
@@ -12,7 +12,7 @@ export const STUDENT_DOC_TYPES_STANDARD: DocumentType[] = [
   DocumentType.CHARACTER_PROFILE,
 ];
 
-export const STUDENT_DOC_TYPES_INTERACTIVE: DocumentType[] = [
+export const STUDENT_DOC_TYPES_INTERACTIVE = [
   DocumentType.TUTOR,
   DocumentType.DO_HOMEWORK,
   DocumentType.SOLVE_CONTROL_WORK,
@@ -21,7 +21,7 @@ export const STUDENT_DOC_TYPES_INTERACTIVE: DocumentType[] = [
 
 export const ADULT_CATEGORIES = ['Жизнь', 'Наука', 'Бизнес', 'Анализ', 'Кодинг', 'Творчество'];
 
-export const SCIENTIFIC_DOC_TYPES: DocumentType[] = [
+export const SCIENTIFIC_DOC_TYPES = [
     DocumentType.THESIS,
     DocumentType.ACADEMIC_ARTICLE,
     DocumentType.SCIENTIFIC_RESEARCH,
@@ -29,7 +29,7 @@ export const SCIENTIFIC_DOC_TYPES: DocumentType[] = [
     DocumentType.TECH_IMPROVEMENT,
 ];
 
-export const LIFE_DOC_TYPES: DocumentType[] = [
+export const LIFE_DOC_TYPES = [
     DocumentType.DOCUMENT_ANALYSIS,
     DocumentType.CONSULTATION,
     DocumentType.ASTROLOGY,
@@ -37,31 +37,31 @@ export const LIFE_DOC_TYPES: DocumentType[] = [
     DocumentType.FORECASTING,
 ];
 
-export const CREATIVE_DOC_TYPES: DocumentType[] = [
+export const CREATIVE_DOC_TYPES = [
     DocumentType.BOOK_WRITING,
     DocumentType.SCRIPT,
     DocumentType.TEXT_REWRITING,
     DocumentType.AUDIO_SCRIPT,
 ];
 
-export const BUSINESS_DOC_TYPES: DocumentType[] = [
+export const BUSINESS_DOC_TYPES = [
     DocumentType.SWOT_ANALYSIS,
     DocumentType.COMMERCIAL_PROPOSAL,
     DocumentType.BUSINESS_PLAN,
     DocumentType.MARKETING_COPY,
 ];
 
-export const CODE_DOC_TYPES: DocumentType[] = [
+export const CODE_DOC_TYPES = [
     DocumentType.CODE_GENERATION,
 ];
 
-export const ANALYSIS_DOC_TYPES: DocumentType[] = [
+export const ANALYSIS_DOC_TYPES = [
     DocumentType.ANALYSIS_SHORT,
     DocumentType.ANALYSIS_VERIFY,
 ];
 
 
-export const DOC_TYPES_BY_ADULT_CATEGORY: Record<string, DocumentType[]> = {
+export const DOC_TYPES_BY_ADULT_CATEGORY = {
   'Жизнь': LIFE_DOC_TYPES,
   'Наука': SCIENTIFIC_DOC_TYPES,
   'Бизнес': BUSINESS_DOC_TYPES,
@@ -70,7 +70,7 @@ export const DOC_TYPES_BY_ADULT_CATEGORY: Record<string, DocumentType[]> = {
   'Творчество': CREATIVE_DOC_TYPES,
 };
 
-export const BOOK_GENRES: string[] = [
+export const BOOK_GENRES = [
     'Фэнтези',
     'Научная фантастика',
     'Детектив',
@@ -82,7 +82,7 @@ export const BOOK_GENRES: string[] = [
     'Постапокалипсис'
 ];
 
-export const BOOK_STYLES: string[] = [
+export const BOOK_STYLES = [
     'Эпический',
     'Юмористический',
     'Драматический',
@@ -92,7 +92,7 @@ export const BOOK_STYLES: string[] = [
     'Философский'
 ];
 
-export const PRICING_PACKAGES: GenerationPackage[] = [
+export const PRICING_PACKAGES = [
   {
     name: 'Стартовый',
     generations: 10,
@@ -111,20 +111,20 @@ export const PRICING_PACKAGES: GenerationPackage[] = [
 ];
 
 // New constants for new features
-export const MARKETING_TEXT_TYPES: string[] = ['Слоган', 'Пост для соцсетей', 'Рекламное объявление', 'Email-рассылка', 'Статья для блога'];
-export const TONE_OF_VOICE_OPTIONS: string[] = ['Профессиональный', 'Дружелюбный', 'Юмористический', 'Провокационный', 'Заботливый'];
+export const MARKETING_TEXT_TYPES = ['Слоган', 'Пост для соцсетей', 'Рекламное объявление', 'Email-рассылка', 'Статья для блога'];
+export const TONE_OF_VOICE_OPTIONS = ['Профессиональный', 'Дружелюбный', 'Юмористический', 'Провокационный', 'Заботливый'];
 
-export const REWRITING_GOALS: string[] = ['Повысить уникальность', 'Изменить стиль', 'Сократить', 'Расширить', 'Внести изменения'];
-export const REWRITING_STYLES: string[] = ['Научный', 'Популярный', 'Официальный', 'Неформальный', 'Художественный'];
+export const REWRITING_GOALS = ['Повысить уникальность', 'Изменить стиль', 'Сократить', 'Расширить', 'Внести изменения'];
+export const REWRITING_STYLES = ['Научный', 'Популярный', 'Официальный', 'Неформальный', 'Художественный'];
 
-export const PROGRAMMING_LANGUAGES: string[] = ['JavaScript', 'Python', 'Java', 'C++', 'HTML/CSS', 'SQL', 'TypeScript', 'Go', 'Rust'];
+export const PROGRAMMING_LANGUAGES = ['JavaScript', 'Python', 'Java', 'C++', 'HTML/CSS', 'SQL', 'TypeScript', 'Go', 'Rust'];
 
-export const TUTOR_SUBJECTS: string[] = ['Математика', 'Физика', 'Химия', 'Биология', 'История', 'Литература', 'Русский язык', 'Английский язык', 'Китайский', 'Астрономия', 'Обществознание', 'Информатика'];
+export const TUTOR_SUBJECTS = ['Математика', 'Физика', 'Химия', 'Биология', 'История', 'Литература', 'Русский язык', 'Английский язык', 'Китайский', 'Астрономия', 'Обществознание', 'Информатика'];
 
 
-export const AUDIO_SCRIPT_TYPES: string[] = ['Интервью', 'Разговор', 'Подкаст', 'Повествование'];
+export const AUDIO_SCRIPT_TYPES = ['Интервью', 'Разговор', 'Подкаст', 'Повествование'];
 
-export const AUDIO_VOICE_PROFILES: VoiceProfile[] = [
+export const AUDIO_VOICE_PROFILES = [
     { id: 'narrator_male_calm', label: 'Рассказчик (муж., спокойный)', description: 'Авторитетный, размеренный. Спокойный мужской голос для нарратива или объяснений.' },
     { id: 'host_female_energetic', label: 'Ведущая (жен., энергичная)', description: 'Дружелюбный, вовлекающий. Энергичный женский голос, идеален для роли ведущей.' },
     { id: 'expert_male_confident', label: 'Эксперт (муж., уверенный)', description: 'Знающий, убедительный. Уверенный мужской голос для экспертных мнений.' },
@@ -137,7 +137,7 @@ const MEDICAL_DISCLAIMER = "ВАЖНО: Я — виртуальный ассис
 const LEGAL_DISCLAIMER = "ВАЖНО: Я — виртуальный ассистент. Предоставленная информация не является юридической консультацией и носит исключительно информационный характер. Для решения вашей проблемы рекомендуется обратиться к квалифицированному юристу.";
 const FINANCIAL_DISCLAIMER = "ВАЖНО: Я — виртуальный ассистент. Эта информация не является финансовой рекомендацией или инвестиционным советом. Все финансовые решения следует принимать после консультации с лицензированным финансовым консультантом.";
 
-export const SPECIALISTS: Specialist[] = [
+export const SPECIALISTS = [
     // Medical
     {
         id: 'therapist', name: 'Терапевт', category: 'Медицина',
