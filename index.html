@@ -115,16 +115,17 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
     
     <!-- Step 3: Load the entry point script using type="text/babel" -->
     <!-- data-type="module" is crucial for Babel to handle ES imports/exports -->
-    <script type="text/babel" data-type="module" data-presets="react,typescript" data-filename="index.tsx">
+    <script type="text/babel" data-type="module" data-presets="react,typescript" data-filename="index.js">
       import React from 'react';
       import ReactDOM from 'react-dom/client';
-      import App from './App.tsx';
+      import App from './App.js';
 
       const rootElement = document.getElementById('root');
       if (!rootElement) {
@@ -139,5 +140,6 @@
       );
     </script>
 
-  </body>
+  <script type="module" src="/index.tsx"></script>
+</body>
 </html>

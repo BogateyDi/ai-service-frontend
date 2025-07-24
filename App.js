@@ -1,21 +1,15 @@
-
-
-
-
-
-
 import React, { useState, useCallback, useEffect } from 'react';
-import { Header } from './components/Header.tsx';
-import { GeneratorView } from './components/GeneratorView.tsx';
-import { PricingView } from './components/PricingView.tsx';
-import { AssistantView } from './components/AssistantView.tsx';
-import { TermsOfUseModal } from './components/TermsOfUseModal.tsx';
-import { PurchaseSuccessModal } from './components/PurchaseSuccessModal.tsx';
-import { AppView, GenerationPackage, UserAccount, ChatMessage, GenerationRecord, DocumentType, GenerationResult, FavoriteService } from './types.ts';
+import { Header } from './components/Header.js';
+import { GeneratorView } from './components/GeneratorView.js';
+import { PricingView } from './components/PricingView.js';
+import { AssistantView } from './components/AssistantView.js';
+import { TermsOfUseModal } from './components/TermsOfUseModal.js';
+import { PurchaseSuccessModal } from './components/PurchaseSuccessModal.js';
+import { AppView, GenerationPackage, UserAccount, ChatMessage, GenerationRecord, DocumentType, GenerationResult, FavoriteService } from './types.js';
 import { Toaster, toast } from 'react-hot-toast';
-import { Footer } from './components/Footer.tsx';
-import { sendMessage } from './services/geminiService.ts';
-import { GenerationProgressModal } from './components/GenerationProgressModal.tsx';
+import { Footer } from './components/Footer.js';
+import { sendMessage } from './services/geminiService.js';
+import { GenerationProgressModal } from './components/GenerationProgressModal.js';
 
 
 const CHAT_HISTORY_LIMIT = 50;

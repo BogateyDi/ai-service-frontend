@@ -1,4 +1,3 @@
-
 import { 
     DocumentType, 
     GenerationResult, 
@@ -23,7 +22,7 @@ import {
     GenerationRecord,
     AudioScriptRequest,
     Specialist,
-} from '../types.ts';
+} from '../types.js';
 
 const BACKEND_URL = 'https://ai-service-backend-8lea.onrender.com';
 

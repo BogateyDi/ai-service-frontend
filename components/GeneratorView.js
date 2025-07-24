@@ -1,7 +1,6 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
-import { TextGeneratorForm } from './TextGeneratorForm.tsx';
-import { ResultDisplay, ResultViewer } from './ResultDisplay.tsx';
+import { TextGeneratorForm } from './TextGeneratorForm.js';
+import { ResultDisplay, ResultViewer } from './ResultDisplay.js';
 import { 
     GenerationResult, DocumentType, BookPlanRequest, BookPlan, AstrologyStep, BookWritingStep, 
     FileTaskStep, BusinessStep, SwotAnalysisRequest, CommercialProposalRequest,
@@ -16,7 +15,7 @@ import {
     AnalysisStep,
     ForecastingStep,
     PersonalAnalysisRequest
-} from '../types.ts';
+} from '../types.js';
 import { 
     generateText,
     generateNatalChart, generateHoroscope, generateBookPlan, generateSingleChapter, 
@@ -28,10 +27,10 @@ import {
     sendSpecialistMessage, generateGrantPlan, generateAudioScript, performAnalysis,
     generateForecasting,
     convertMermaidToTable
-} from '../services/geminiService.ts';
-import { STUDENT_DOC_TYPES_STANDARD, STUDENT_DOC_TYPES_INTERACTIVE, ADULT_CATEGORIES, DOC_TYPES_BY_ADULT_CATEGORY, SCIENTIFIC_DOC_TYPES, LIFE_DOC_TYPES, CREATIVE_DOC_TYPES, BUSINESS_DOC_TYPES, CODE_DOC_TYPES, CHILDREN_AGES, ANALYSIS_DOC_TYPES } from '../constants.ts';
+} from '../services/geminiService.js';
+import { STUDENT_DOC_TYPES_STANDARD, STUDENT_DOC_TYPES_INTERACTIVE, ADULT_CATEGORIES, DOC_TYPES_BY_ADULT_CATEGORY, SCIENTIFIC_DOC_TYPES, LIFE_DOC_TYPES, CREATIVE_DOC_TYPES, BUSINESS_DOC_TYPES, CODE_DOC_TYPES, CHILDREN_AGES, ANALYSIS_DOC_TYPES } from '../constants.js';
 import { toast } from 'react-hot-toast';
-import { GenerationProgressModal } from './GenerationProgressModal.tsx';
+import { GenerationProgressModal } from './GenerationProgressModal.js';
 
 
 const findCategoryForDocType = (docTypeToFind: DocumentType): string | null => {

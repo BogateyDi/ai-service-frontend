@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { 
@@ -21,12 +20,12 @@ import {
     AudioScriptRequest,
     AnalysisStep,
     ForecastingStep
-} from '../types.ts';
-import { BOOK_GENRES, BOOK_STYLES, MARKETING_TEXT_TYPES, TONE_OF_VOICE_OPTIONS, REWRITING_GOALS, REWRITING_STYLES, PROGRAMMING_LANGUAGES, SPECIALISTS, TUTOR_SUBJECTS, AUDIO_SCRIPT_TYPES, AUDIO_VOICE_PROFILES, CHILDREN_AGES } from '../constants.ts';
+} from '../types.js';
+import { BOOK_GENRES, BOOK_STYLES, MARKETING_TEXT_TYPES, TONE_OF_VOICE_OPTIONS, REWRITING_GOALS, REWRITING_STYLES, PROGRAMMING_LANGUAGES, SPECIALISTS, TUTOR_SUBJECTS, AUDIO_SCRIPT_TYPES, AUDIO_VOICE_PROFILES, CHILDREN_AGES } from '../constants.js';
 
-import FileUploadForm from './FileUploadForm.tsx';
-import { ThesisForm } from './ThesisForm.tsx';
-import { MermaidDiagram } from './MermaidDiagram.tsx';
+import FileUploadForm from './FileUploadForm.js';
+import { ThesisForm } from './ThesisForm.js';
+import { MermaidDiagram } from './MermaidDiagram.js';
 
 
 // #region ResultViewer Component
